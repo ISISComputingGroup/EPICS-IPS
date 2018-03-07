@@ -1,0 +1,23 @@
+
+How to run the test simulation, the test ioc and the tests all in one go.
+
+./etc/test/OxInstIPS_test.py -t simulation -i -e -g
+
+Do this from the module top directory after you have built it and also
+built the generated ioc directory.  
+
+12/01/2018: Above is not working.  Dont think development of the
+simulation was completed and there is no example IOC and no
+documentation.
+
+The fact that it is a modular power supply means that several units
+can be linked together, but they function as one to deliver power and
+also from a Controls point of view.
+
+For example on the DLS BL10J Magnet, 2 units have been coupled together to
+make a single power supply unit.
+
+Oxford Instruments reflect this in the model number of what they
+supply, so what appear to different models may in fact be similar
+units chained together differently.
+

@@ -1,0 +1,310 @@
+# File OxInstIPS.protocol
+#
+# Stream Device protocol file for the Oxford Instruments Modular IPS 
+# superconducting magnet power supplies.
+#
+# The full protocol is described in the IPS Operators Handbook. 
+#
+# The commands are all single upper case letters, which can be followed by a numeric value as a parameter.
+# These are considered decimal numbers.
+#
+# The terminator is implied on page 41 of the Operators Handbook to be as <CR>,
+# (Carriage Return, \r or Ox0D or CTRL-M) by default, but it can be CHANGED with the Q command
+# to add an <LF> (Line Feed, \n or Ox0A or CTRL-J) afterwards.  The setting is lost and reverts
+# to default if the unit is power-cycled.
+#
+Terminator = "\r";
+
+# Timeout values cribbed from OxInstCryojet module - had occasional
+# problems with the default settings with one record timing out and
+# another record seeing the reply - see if longer time out will fix it.
+#
+readtimeout = 500;
+replytimeout = 5000;
+locktimeout = 20000;
+PollPeriod = 500;
+ExtraInput = Ignore;
+
+# Protocol does not implement U command to unlock system commands or system commands.
+# This is because they change configuration information and give access to RAM, which
+# is not desirable to be interfaced to EPICS.
+# Also there are some specialist commands the manual says are not intended or needed
+# for customer use, so these are not done either.
+
+#########################################################################################
+# ---------
+# V Command
+# ---------
+# Get the unit version information - returns unit type and firmware information.
+# Manual says letter commands always reply with themselves at the start, but
+# found out this one does not.  Manual also shows a copyright symbol, which is not an
+# ASCII symbol and might cause problems for EPICS.  In practice found (c) instead.
+# The %s format grabs the string upto the first space, the %c grabs the rest.  It
+# was too long to fit into one EPICS string record value.
+#getVersion { out "V"; in "%#s"; }
+#getVersion { out "V"; in "%c"; }
+getVersion { out "V"; in "%(\$1:MODEL.VAL)s%(\$1:VERSION.VAL)c"; }
+
+#########################################################################################
+# ---------
+# R Command
+# ---------
+# Commands to read parameters.
+# Use the R command (Read Parameter) followed by integer in range 0 to 24.
+# R3 Not Used, R4 R10, R11, R12, R13, R14 described as engineering diagnostic commands, so
+# not implemented.
+# Get demand current (output current) in amps - ER=yes (Extra Resolution option affects it).
+getDemandCurrent { out "R0"; in "R%f"; }
+
+# Get measured power supply voltage in volts - ER=no (Extra Resolution option does not affect it).
+getSupplyVoltage { out "R1"; in "R%f"; }
+
+# Get measured magnet curren in amps - ER=no.
+getMeasuredMagnetCurrent { out "R2"; in "R%f"; }
+
+# Get set point (target current) in amps ER=yes.
+getSetpointCurrent { out "R5"; in "R%f"; }
+
+# Get current sweep rate in amps per minute ER=yes.
+getCurrentSweepRate { out "R6"; in "R%f"; }
+
+# Get demand field (output field) in tesla ER=yes.
+getDemandField { out "R7"; in "R%f"; }
+
+# Get set point (target field) in tesla ER=yes.
+getSetpointField { out "R8"; in "R%f"; }
+
+# Get field sweep rate in tesla per minute ER=yes.
+getFieldSweepRate { out "R9"; in "R%f"; }
+
+# Get software voltage limit in volts ER=no.
+getSoftwareVoltageLimit { out "R15"; in "R%f"; }
+
+# Get persistent magnet current in amps ER=yes.
+getPersistentMagnetCurrent { out "R16"; in "R%f"; }
+
+# Get trip current in amps ER=yes.
+getTripCurrent { out "R17"; in "R%f"; }
+
+# Get persistent magnetic field in tesla ER=yes.
+getPersistentMagnetField { out "R18"; in "R%f"; }
+
+# Get trip field in tesla ER=yes.
+getTripField { out "R19"; in "R%f"; }
+
+# Get switch heater current in milliamp ER=no.
+# There is a chance this is not needed for BL10J magnet - not all magnet systems have a switch
+# heater.
+getHeaterCurrent { out "R20"; in "R%f"; }
+
+# Get safe current limit, most negative in amps ER=no.
+getNegCurrentLimit { out "R21"; in "R%f"; }
+
+# Get safe current limit, most positive in amps ER=no.
+getPosCurrentLimit { out "R22"; in "R%f"; }
+
+# Get lead resistance in milliohms ER=no.
+getLeadResistance { out "R23"; in "R%f"; }
+
+# Get magnet inductance in henry ER=no.
+getMagnetInductance { out "R24"; in "R%f"; }
+
+# End of list of commands to read parameters.
+#########################################################################################
+# ---------
+# X Command
+# ---------
+# Command to get the status - the IPS returns loads of flags in one command
+#
+# The X command - examine status.
+# According to the manual the reply is of the form
+#
+# XmnAnCnHnMmnPmn
+#
+# where:
+#	X, A, C, H, M and P are literal characters introducing the values for different types of status as follows
+# 	and m and n are integer digits.
+#	X m is the system fault status
+# 		0 Normal
+#  		1 Quenched
+# 		2 Overheated
+#  		4 Warming Up
+#  		8 Fault
+#	X n is the system limiting status
+#		0 Normal
+#		1 On +ve V Limit
+#		2 On -ve V Limit
+#		4 Current too -ve
+#		8 Current too +ve
+#	A n is the activity
+#		0 Hold
+#		1 To Set Point
+#		2 To Zero
+#		4 Clamped
+#	C n is the Local/Remote Control status
+# 		0 Local & Locked
+# 		1 Remote & Locked
+# 		2 Local & Unlocked
+# 		3 Remote & Unlocked
+# 		4 Auto-Run-Down
+# 		5 Auto-Run-Down
+# 		6 Auto-Run-Down
+# 		7 Auto-Run-Down
+#	H n is for the switch heater
+# 		0 Off Mag at 0
+# 		1 On
+# 		2 Off Mag at F
+# 		5 Heater Fault
+# 		8 No Switch
+#	M m is for the sweeping mode parameters
+# 		0 Amps Fast
+# 		1 Tesla Fast
+# 		4 Amps Slow
+# 		5 Tesla Slow
+#	M n is for the sweeping status
+# 		0 At rest
+# 		1 Sweeping
+# 		2 Sweep Limiting
+# 		3 Swping & Lmting
+#	P m and n are for the polarity and has been superseded by signed values on the current and field parameters.
+#	P is present for backward compatibility and can be ignored, so we do.
+getStatus { 
+	out "X"; 
+	in 
+	  "X%(\$1:STS:SYSTEM:FAULT.VAL)1u%(\$1:STS:SYSTEM:LIMIT.VAL)1u"
+	  "A%(\$1:STS:ACTIVITY.VAL)1u"
+	  "C%(\$1:STS:CONTROL.VAL)1u"
+	  "H%(\$1:STS:HEATER.VAL)1u"
+	  "M%(\$1:STS:SWEEPMODE:PARAMS.VAL)1u%(\$1:STS:SWEEPMODE:SWEEP.VAL)1u"
+	  "P%*1u%*1u"
+	;
+	# Try to recover from any mismatch by writing the value of the input that doesn't match
+	# to a string record.  We expect error messages to start with ? character.
+	@mismatch { in "%(\$1:DBG:STS:MISMATCH.VAL)c"; }
+}
+
+# End of examining the status.
+#########################################################################################
+# Commands to set stuff.
+# The instrument replies to most commands, so have to eat the reply somehow...
+# According to the manual the response to a successful 
+# command is the command letter it was given.
+# If there is an error the response is a string starting with a question mark.
+# If this is not successful, can issue a command preceded by a dollar, which should shut
+# up the reply.
+
+# ---------
+# Q Command
+# ---------
+# Q command is an exception in that it does not reply.  Also there is no readback for
+# the parameters it sets.
+#
+# Diddle with comms reply terminal and resolution.  Only certain values allowed, 
+# so protect with explicit commands.
+# Extended Resolution is an order of magnitude higher than Normal Resolution.
+# by being explicity about the strings.
+# Q0 Normal/Default	Reply terminator <CR>,        Normal Resolution
+# Q2                    Reply terminator to <CR><LF>, Normal Resolution
+# Q4 			Reply terminator <CR>,        Extended Resolution
+# Q6 			Reply terminator <CR><LF>,    Extended Resolution
+
+# Don't think this will work.
+#setComms { out "%{Q0=0|Q2=2|Q4=4|Q6=6}" }
+
+setCommsResNormal   { out "Q0" }
+setCommsResLF       { out "Q2" }
+setCommsResExtended { out "Q4" }
+setCommsResLFExtended { out "Q6" }
+
+# ---------
+# W Command
+# ---------
+# Diddle with the comms wait interval - how long it waits between sending characters.
+# Can vary between 0 and 32767 milliseconds, defaults to zero on power up.
+setWaitInterval {out "W%u" ; in "W" }
+
+# ---------
+# C Command
+# ---------
+# Set Control mode - grab control of the unit from local users.
+# C0 Local & Locked
+# C1 Remote & Locked
+# C2 Local & Unlocked
+# C3 Remote & Unlocked
+# You cannot set the auto-run-down state read in the status readback - the unit does that.
+setControl { out "%{C0|C1|C2|C3}" ; in "C" }
+
+# ---------
+# A Command
+# ---------
+# Set the activity - i.e. Make it do something.
+# A0 Hold 
+# A1 To Set Point
+# A2 To Zero
+# A4 Clamp
+setActivity { out "A%u" ; in "A" ; }
+
+# ---------
+# F Command
+# ---------
+# Do not want to interfere with Front Panel Display remotely, therefore not bothering with F command.
+
+# ---------
+# H Command
+# ---------
+# Got no heater, so not bothering with H command.
+
+# ---------
+# I Command
+# ---------
+# Set the setpoint (target) current.
+# The precision of the controller is different depending on whether "Extended Resolution" is set or not,
+# but in practice it just ignores extra digit, so we can always use the most resolution for each
+# quantity.
+setSetpointCurrent { out "I%#.4f" ; in "I" ; }
+
+# ---------
+# J Command
+# ---------
+# Set the setpoint (target) field.
+setSetpointField { out "J%#.5f" ; in "J" ; }
+
+# ---------
+# M Command 
+# ---------
+# Set the mode.
+# Control "Fast/Slow" sweep - and whether units displayed in Current of Field on Front Panel.
+# This is not so straight forwards as it might seem - need to be careful in the template.
+setMode { out "M%u" ; in "M" ; }
+
+# ---------
+# P Command
+# ---------
+# Set the polarity.  Not implemented - it is obsolete.
+
+# ---------
+# S Command 
+# ---------
+# Set current sweep rate.
+# Rate at which current will be ramped or swept to target, either the setpoint or zero.
+setCurrentSweeprate { out "S%#.3f" ; in "S" ; }
+
+# ---------
+# T Command 
+# ---------
+# Set field sweep rate.
+# Rate at which field will be ramped or swept to target, either the setpoint or zero.
+setFieldSweeprate { out "T%#.4f" ; in "T" ; }
+
+# -------------------
+# Y, Z and ~ Commands
+# -------------------
+# Y and Z give access to read and write the RAM, and are protected system commands not intended for customer use.
+# ~ Allows calibration changes to be stored.  Do not want users to have access to these functions.
+# Therefore not bothering with Y, Z or ~ commands.
+
+# ---------
+# ! Command
+# ---------
+# This allows the instrument to be given a number so it will share an RS232 line with a chain of other Oxford Instruments controllers.
+# We are not intending to use the system like this, so will not bother with this command.
