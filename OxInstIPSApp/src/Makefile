@@ -43,7 +43,7 @@ OxInstIPS_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
 # This line says that this IOC Application depends on the
 # xxx Support Module
-OxInstIPS_LIBS += stream asyn calc
+OxInstIPS_LIBS += stream asyn calc sscan pcre
 
 # We need to link this IOC Application against the EPICS Base libraries
 OxInstIPS_LIBS += $(EPICS_BASE_IOC_LIBS)

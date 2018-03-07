@@ -21,8 +21,10 @@ SUPPORT=/dls_sw/prod/R3.14.12.3/support
 
 # Support Modules
 ASYN=$(SUPPORT)/asyn/master
-STREAM=$(SUPPORT)/streamDevice/master
+STREAMDEVICE=$(SUPPORT)/StreamDevice/master
 CALC=$(SUPPORT)/calc/master
+SSCAN=$(SUPPORT)/sscan/master
+PCRE=$(SUPPORT)/pcre/master
 
 # optional extra local definitions here
 -include $(TOP)/configure/RELEASE.private
