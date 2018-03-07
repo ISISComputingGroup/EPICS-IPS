@@ -669,7 +669,7 @@ record(ao, "$(P):SET:WAITINTERVAL") {
   field(DESC, "Set Wait Interval")
   field(DTYP, "stream")
   field(SCAN, "Passive")
-  field(EGU, "msec")
+  field(EGU, "ms")
   field(OUT,  "@OxInstIPS.protocol setWaitInterval $(port)")
 }
 
