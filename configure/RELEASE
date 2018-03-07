@@ -20,14 +20,12 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 SUPPORT=/dls_sw/prod/R3.14.12.3/support
 
 # Support Modules
-ASYN=$(SUPPORT)/asyn/4-21
-STREAM=$(SUPPORT)/streamDevice/2-5dls2
-CALC=$(SUPPORT)/calc/3-1
+ASYN=$(SUPPORT)/asyn/master
+STREAM=$(SUPPORT)/streamDevice/master
+CALC=$(SUPPORT)/calc/master
 
-# EPICS_BASE usually appears last so other apps can override stuff:
-EPICS_BASE=/dls_sw/epics/R3.14.12.3/base
-
-#Capfast users may need the following definitions
-#CAPFAST_TEMPLATES=
-#SCH2EDIF_PATH=
+# optional extra local definitions here
 -include $(TOP)/configure/RELEASE.private
+
+include $(TOP)/../../../ISIS_CONFIG
+-include $(TOP)/../../../ISIS_CONFIG.$(EPICS_HOST_ARCH)
