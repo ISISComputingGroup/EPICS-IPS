@@ -6,7 +6,7 @@ include $(TOP)/configure/CONFIG
 # Build an Diamond Support Module
 # -------------------------------
 
-LIBRARY_IOC += OxInstIPS
+PROD_IOC += OxInstIPS
 
 # xxxRecord.h will be created from xxxRecord.dbd
 #DBDINC += xxx.h
@@ -43,7 +43,7 @@ OxInstIPS_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
 # This line says that this IOC Application depends on the
 # xxx Support Module
-#OxInstIPS_LIBS += xxx
+OxInstIPS_LIBS += stream asyn calc
 
 # We need to link this IOC Application against the EPICS Base libraries
 OxInstIPS_LIBS += $(EPICS_BASE_IOC_LIBS)
