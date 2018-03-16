@@ -270,7 +270,7 @@ record(ai, "$(P):RBV:LEADRESISTANCE") {
   field(DTYP, "stream")
   field(SCAN, "Passive")
   field(INP,  "@OxInstIPS.protocol getLeadResistance $(port)")
-  field(EGU,  "mOhm")
+  field(EGU,  "mohm")
   field(PREC, "5")
   field(ADEL, "0.00002" )
 }
