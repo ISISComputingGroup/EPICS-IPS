@@ -43,7 +43,7 @@ ExtraInput = Ignore;
 # was too long to fit into one EPICS string record value.
 #getVersion { out "V"; in "%#s"; }
 #getVersion { out "V"; in "%c"; }
-getVersion { out "V"; in "%(\$1MODEL.VAL)s%(\$1VERSION.VAL)c"; }
+getVersion { out "V"; in "%(\$1:MODEL.VAL)s%(\$1:VERSION.VAL)c"; }
 
 #########################################################################################
 # ---------
@@ -171,16 +171,16 @@ getMagnetInductance { out "R24"; in "R%f"; }
 getStatus { 
 	out "X"; 
 	in 
-	  "X%(\$1STS:SYSTEM:FAULT.VAL)1u%(\$1STS:SYSTEM:LIMIT.VAL)1u"
-	  "A%(\$1STS:ACTIVITY.VAL)1u"
-	  "C%(\$1STS:CONTROL.VAL)1u"
-	  "H%(\$1STS:HEATER.VAL)1u"
-	  "M%(\$1STS:SWEEPMODE:PARAMS.VAL)1u%(\$1STS:SWEEPMODE:SWEEP.VAL)1u"
+	  "X%(\$1:STS:SYSTEM:FAULT.VAL)1u%(\$1:STS:SYSTEM:LIMIT.VAL)1u"
+	  "A%(\$1:STS:ACTIVITY.VAL)1u"
+	  "C%(\$1:STS:CONTROL.VAL)1u"
+	  "H%(\$1:STS:HEATER.VAL)1u"
+	  "M%(\$1:STS:SWEEPMODE:PARAMS.VAL)1u%(\$1:STS:SWEEPMODE:SWEEP.VAL)1u"
 	  "P%*1u%*1u"
 	;
 	# Try to recover from any mismatch by writing the value of the input that doesn't match
 	# to a string record.  We expect error messages to start with ? character.
-	@mismatch { in "%(\$1DBG:STS:MISMATCH.VAL)c"; }
+	@mismatch { in "%(\$1:DBG:STS:MISMATCH.VAL)c"; }
 }
 
 # End of examining the status.
