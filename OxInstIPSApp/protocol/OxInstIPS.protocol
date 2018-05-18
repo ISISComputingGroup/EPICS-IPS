@@ -93,8 +93,6 @@ getPersistentMagnetField { out "R18"; in "R%f"; }
 getTripField { out "R19"; in "R%f"; }
 
 # Get switch heater current in milliamp ER=no.
-# There is a chance this is not needed for BL10J magnet - not all magnet systems have a switch
-# heater.
 getHeaterCurrent { out "R20"; in "R%f"; }
 
 # Get safe current limit, most negative in amps ER=no.
@@ -172,10 +170,10 @@ getStatus {
 	out "X"; 
 	in 
 	  "X%(\$1STS:SYSTEM:FAULT.VAL)1u%(\$1STS:SYSTEM:LIMIT.VAL)1u"
-	  "A%(\$1STS:ACTIVITY.VAL)1u"
-	  "C%(\$1STS:CONTROL.VAL)1u"
+	  "A%(\$1ACTIVITY.VAL)1u"
+	  "C%(\$1CONTROL.VAL)1u"
 	  "H%(\$1STS:HEATER.VAL)1u"
-	  "M%(\$1STS:SWEEPMODE:PARAMS.VAL)1u%(\$1STS:SWEEPMODE:SWEEP.VAL)1u"
+	  "M%(\$1SWEEPMODE:PARAMS.VAL)1u%(\$1STS:SWEEPMODE:SWEEP.VAL)1u"
 	  "P%*1u%*1u"
 	;
 	# Try to recover from any mismatch by writing the value of the input that doesn't match
