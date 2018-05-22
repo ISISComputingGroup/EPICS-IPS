@@ -172,7 +172,7 @@ getStatus {
 	  "X%(\$1STS:SYSTEM:FAULT.VAL)1u%(\$1STS:SYSTEM:LIMIT.VAL)1u"
 	  "A%(\$1ACTIVITY.VAL)1u"
 	  "C%(\$1CONTROL.VAL)1u"
-	  "H%(\$1STS:HEATER.VAL)1u"
+	  "H%(\$1HEATER:STATUS.VAL)1u"
 	  "M%(\$1SWEEPMODE:PARAMS.VAL)1u%(\$1STS:SWEEPMODE:SWEEP.VAL)1u"
 	  "P%*1u%*1u"
 	;
@@ -250,7 +250,13 @@ setActivity { out "A%u" ; in "A" ; }
 # ---------
 # H Command
 # ---------
-# Got no heater, so not bothering with H command.
+#
+# Set the status of the heater.
+# 0 = heater off (close switch)
+# 1 = heater on (open switch) [Checks that magnet curr == psu curr before having any effect, so safer]
+# 2 = heater on (open switch) [no checks... UNSAFE! don't use this.]
+#
+setHeaterStatus {out "H%{0|1}" ; in "H"; }
 
 # ---------
 # I Command
