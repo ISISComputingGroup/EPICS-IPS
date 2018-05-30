@@ -1,0 +1,1263 @@
+4 0 1
+beginScreenProperties
+major 4
+minor 0
+release 1
+x 741
+y 91
+w 880
+h 500
+font "arial-medium-r-18.0"
+ctlFont "arial-medium-r-18.0"
+btnFont "arial-medium-r-18.0"
+fgColor index 14
+bgColor index 3
+textColor index 14
+ctlFgColor1 index 14
+ctlFgColor2 index 0
+ctlBgColor1 index 0
+ctlBgColor2 index 14
+topShadowColor index 0
+botShadowColor index 14
+showGrid
+gridSize 5
+endScreenProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 410
+y 50
+w 400
+h 20
+controlPv "$(P):VERSION"
+font "arial-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 95
+y 50
+w 204
+h 20
+controlPv "$(P):MODEL"
+font "arial-medium-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+autoHeight
+limitsFromDb
+nullColor index 0
+useHexPrefix
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 355
+w 200
+h 16
+controlPv "$(P):RBV:TRIPFIELD"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 355
+w 76
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Trip Field:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 50
+w 61
+h 20
+font "arial-bold-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Model:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 320
+y 50
+w 76
+h 20
+font "arial-bold-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Version:"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 435
+w 89
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Inductance:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 435
+w 200
+h 16
+controlPv "$(P):RBV:MAGNETINDUCTANCE"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 115
+w 200
+h 16
+controlPv "$(P):RBV:DEMANDCURRENT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 115
+w 131
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Demand Current:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 135
+w 200
+h 16
+controlPv "$(P):RBV:SUPPLYVOLTAGE"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 135
+w 119
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Supply Voltage:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 155
+w 200
+h 16
+controlPv "$(P):RBV:MEASUREDMAGNETCURRENT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 155
+w 206
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Measured Magnet Current:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 175
+w 200
+h 16
+controlPv "$(P):RBV:SETPOINTCURRENT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 175
+w 127
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Setpoint Current:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 195
+w 200
+h 16
+controlPv "$(P):RBV:CURRENTSWEEPRATE"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 195
+w 148
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Current Sweeprate:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 215
+w 200
+h 16
+controlPv "$(P):RBV:DEMANDFIELD"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 215
+w 113
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Demand Field:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 235
+w 200
+h 16
+controlPv "$(P):RBV:SETPOINTFIELD"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 235
+w 109
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Setpoint Field:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 255
+w 200
+h 16
+controlPv "$(P):RBV:FIELDSWEEPRATE"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 255
+w 130
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Field Sweeprate:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 275
+w 200
+h 16
+controlPv "$(P):RBV:SOFTWAREVOLTAGELIMIT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 275
+w 176
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Software Voltage Limit:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 295
+w 200
+h 16
+controlPv "$(P):RBV:PERSISTENTMAGNETCURRENT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 295
+w 204
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Persistent Magnet Current:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 315
+w 200
+h 16
+controlPv "$(P):RBV:TRIPCURRENT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 315
+w 94
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Trip Current:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 335
+w 200
+h 16
+controlPv "$(P):RBV:PERSISTENTMAGNETFIELD"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 335
+w 186
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Persistent Magnet Field:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 375
+w 200
+h 16
+controlPv "$(P):RBV:NEGCURRENTLIMIT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 375
+w 174
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Negative Current Limit:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 395
+w 200
+h 16
+controlPv "$(P):RBV:POSCURRENTLIMIT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 395
+w 166
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Positive Current Limit:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 260
+y 415
+w 200
+h 16
+controlPv "$(P):RBV:LEADRESISTANCE"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+showUnits
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 15
+y 415
+w 135
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Lead Resistance:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 660
+y 115
+w 200
+h 16
+controlPv "$(P):STS:SYSTEM:FAULT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 480
+y 115
+w 103
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "System Fault:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 660
+y 135
+w 200
+h 16
+controlPv "$(P):STS:SYSTEM:LIMIT"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 480
+y 135
+w 101
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "System Limit:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 660
+y 155
+w 200
+h 16
+controlPv "$(P):STS:ACTIVITY"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 480
+y 155
+w 57
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Activity:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 660
+y 175
+w 200
+h 16
+controlPv "$(P):STS:CONTROL"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 480
+y 175
+w 60
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Control:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 660
+y 195
+w 200
+h 16
+controlPv "$(P):STS:HEATER"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 480
+y 195
+w 57
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Heater:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 660
+y 215
+w 200
+h 16
+controlPv "$(P):STS:SWEEPMODE:PARAMS"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 480
+y 215
+w 166
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Sweepmode Params:"
+}
+autoSize
+endObjectProperties
+
+# (Text Monitor)
+object activeXTextDspClass:noedit
+beginObjectProperties
+major 4
+minor 5
+release 0
+x 660
+y 235
+w 200
+h 16
+controlPv "$(P):STS:SWEEPMODE:SWEEP"
+font "arial-medium-r-14.0"
+fgColor index 16
+fgAlarm
+bgColor index 10
+autoHeight
+limitsFromDb
+nullColor index 0
+smartRefresh
+useHexPrefix
+useAlarmBorder
+newPos
+objType "monitors"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 480
+y 235
+w 158
+h 17
+font "arial-medium-r-16.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Sweepmode Sweep:"
+}
+autoSize
+endObjectProperties
+
+# (Exit Button)
+object activeExitButtonClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 653
+y 427
+w 125
+h 55
+fgColor index 46
+bgColor index 3
+topShadowColor index 0
+botShadowColor index 14
+label "EXIT"
+font "arial-medium-r-18.0"
+3d
+endObjectProperties
+
+# (Rectangle)
+object activeRectangleClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 0
+y 0
+w 880
+h 34
+lineColor index 48
+fill
+fillColor index 48
+lineWidth 0
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 0
+x 177
+y 5
+w 387
+h 20
+font "arial-bold-r-18.0"
+fgColor index 14
+bgColor index 0
+useDisplayBg
+value {
+  "Magnet Power Controller Test Screen - $(P)"
+}
+autoSize
+endObjectProperties
+
