@@ -189,6 +189,10 @@ getStatus {
 # If there is an error the response is a string starting with a question mark.
 # If this is not successful, can issue a command preceded by a dollar, which should shut
 # up the reply.
+#
+# IMPORTANT: set remote and unlocked prior to any write command
+
+setRemoteUnlocked	{ out "C3"; wait 100; in "C"; wait 100; }
 
 # ---------
 # Q Command
@@ -208,17 +212,17 @@ getStatus {
 # Don't think this will work.
 #setComms { out "%{Q0=0|Q2=2|Q4=4|Q6=6}" }
 
-setCommsResNormal   { out "Q0"; wait 100; }
-setCommsResLF       { out "Q2"; wait 100; }
-setCommsResExtended { out "Q4"; wait 100; }
-setCommsResLFExtended { out "Q6"; wait 100; }
+setCommsResNormal   { setRemoteUnlocked; out "Q0"; wait 100; }
+setCommsResLF       { setRemoteUnlocked; out "Q2"; wait 100; }
+setCommsResExtended { setRemoteUnlocked; out "Q4"; wait 100; }
+setCommsResLFExtended { setRemoteUnlocked; out "Q6"; wait 100; }
 
 # ---------
 # W Command
 # ---------
 # Diddle with the comms wait interval - how long it waits between sending characters.
 # Can vary between 0 and 32767 milliseconds, defaults to zero on power up.
-setWaitInterval {out "W%u" ; wait 100; in "W"; wait 100; }
+setWaitInterval { setRemoteUnlocked; out "W%u" ; wait 100; in "W"; wait 100; }
 
 # ---------
 # C Command
@@ -229,7 +233,7 @@ setWaitInterval {out "W%u" ; wait 100; in "W"; wait 100; }
 # C2 Local & Unlocked
 # C3 Remote & Unlocked
 # You cannot set the auto-run-down state read in the status readback - the unit does that.
-setControl { out "%{C0|C1|C2|C3}" ; wait 100; in "C"; wait 100; }
+setControl { setRemoteUnlocked; out "%{C0|C1|C2|C3}" ; wait 100; in "C"; wait 100; }
 
 # ---------
 # A Command
@@ -239,7 +243,7 @@ setControl { out "%{C0|C1|C2|C3}" ; wait 100; in "C"; wait 100; }
 # A1 To Set Point
 # A2 To Zero
 # A4 Clamp
-setActivity { out "A%u" ; wait 100; in "A"; wait 100;}
+setActivity { setRemoteUnlocked; out "A%u" ; wait 100; in "A"; wait 100;}
 
 # ---------
 # F Command
@@ -255,7 +259,7 @@ setActivity { out "A%u" ; wait 100; in "A"; wait 100;}
 # 1 = heater on (open switch) [Checks that magnet curr == psu curr before having any effect, so safer]
 # 2 = heater on (open switch) [no checks... UNSAFE! don't use this.]
 #
-setHeaterStatus {out "H%{0|1}" ; wait 100; in "H"; wait 100;}
+setHeaterStatus { setRemoteUnlocked; out "H%{0|1}" ; wait 100; in "H"; wait 100;}
 
 # ---------
 # I Command
@@ -264,13 +268,13 @@ setHeaterStatus {out "H%{0|1}" ; wait 100; in "H"; wait 100;}
 # The precision of the controller is different depending on whether "Extended Resolution" is set or not,
 # but in practice it just ignores extra digit, so we can always use the most resolution for each
 # quantity.
-setSetpointCurrent { out "I%#.4f" ; wait 100; in "I"; wait 100;}
+setSetpointCurrent { setRemoteUnlocked; out "I%#.4f" ; wait 100; in "I"; wait 100;}
 
 # ---------
 # J Command
 # ---------
 # Set the setpoint (target) field.
-setSetpointField { out "J%#.5f" ; wait 100; in "J"; wait 100;}
+setSetpointField { setRemoteUnlocked; out "J%#.5f" ; wait 100; in "J"; wait 100;}
 
 # ---------
 # M Command 
@@ -278,7 +282,7 @@ setSetpointField { out "J%#.5f" ; wait 100; in "J"; wait 100;}
 # Set the mode.
 # Control "Fast/Slow" sweep - and whether units displayed in Current of Field on Front Panel.
 # This is not so straight forwards as it might seem - need to be careful in the template.
-setMode { out "M%u" ; wait 100; in "M"; wait 100;}
+setMode { setRemoteUnlocked; out "M%u" ; wait 100; in "M"; wait 100;}
 
 # ---------
 # P Command
@@ -290,14 +294,14 @@ setMode { out "M%u" ; wait 100; in "M"; wait 100;}
 # ---------
 # Set current sweep rate.
 # Rate at which current will be ramped or swept to target, either the setpoint or zero.
-setCurrentSweeprate { out "S%#.3f" ; wait 100; in "S"; wait 100;}
+setCurrentSweeprate { setRemoteUnlocked; out "S%#.3f" ; wait 100; in "S"; wait 100;}
 
 # ---------
 # T Command 
 # ---------
 # Set field sweep rate.
 # Rate at which field will be ramped or swept to target, either the setpoint or zero.
-setFieldSweeprate { out "T%#.4f" ; wait 100; in "T"; wait 100;}
+setFieldSweeprate { setRemoteUnlocked; out "T%#.4f" ; wait 100; in "T"; wait 100;}
 
 # -------------------
 # Y, Z and ~ Commands
