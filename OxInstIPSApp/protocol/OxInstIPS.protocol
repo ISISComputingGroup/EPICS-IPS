@@ -210,7 +210,7 @@ setRemoteUnlocked	{ out "C3"; wait 100; in "C"; wait 100; }
 # Q6 			Reply terminator <CR><LF>,    Extended Resolution
 
 # Don't think this will work.
-#setComms { out "%{Q0=0|Q2=2|Q4=4|Q6=6}" }
+# setComms { out "%{Q0=0|Q2=2|Q4=4|Q6=6}" }
 
 setCommsResNormal   { setRemoteUnlocked; out "Q0"; wait 100; }
 setCommsResLF       { setRemoteUnlocked; out "Q2"; wait 100; }
@@ -268,7 +268,7 @@ setHeaterStatus { setRemoteUnlocked; out "H%{0|1}" ; wait 100; in "H"; wait 100;
 # The precision of the controller is different depending on whether "Extended Resolution" is set or not,
 # but in practice it just ignores extra digit, so we can always use the most resolution for each
 # quantity.
-setSetpointCurrent { setRemoteUnlocked; out "I%#.4f" ; wait 100; in "I"; wait 100;}
+setSetpointCurrent { out "I%#.4f" ; wait 100; in "I"; wait 100;}
 
 # ---------
 # J Command
