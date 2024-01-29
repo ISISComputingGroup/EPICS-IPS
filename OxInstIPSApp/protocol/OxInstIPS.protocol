@@ -174,7 +174,7 @@ getStatus {
 	  "A%(\$1ACTIVITY.VAL)1u"
 	  "C%(\$1CONTROL.VAL)1u"
 	  "H%(\$1HEATER:STATUS.VAL)1u"
-	  "M%*1u%(\$1STS:SWEEPMODE:SWEEP.VAL)1u"
+	  "M%(\$1SWEEPMODE:PARAMS.VAL)1u%(\$1STS:SWEEPMODE:SWEEP.VAL)1u"
 	;
 	wait 100;
 }
