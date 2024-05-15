@@ -23,9 +23,9 @@ DBD += OxInstIPS.dbd
 
 # OxInstIPS.dbd will be created from these files
 OxInstIPS_DBD += base.dbd
+OxInstIPS_DBD += calcSupport.dbd
 OxInstIPS_DBD += asyn.dbd
 OxInstIPS_DBD += stream.dbd
-OxInstIPS_DBD += calcSupport.dbd
 
 # OxInstIPS_registerRecordDeviceDriver.cpp will be created
 # OxInstIPS.dbd
