@@ -1,0 +1,295 @@
+# File OxInstIPS_SCPI.protocol
+#
+# Stream Device protocol file for the Oxford Instruments Modular IPS 
+# superconducting magnet power supplies.
+# This protocol supports the SCPI commands for the IPS, replacing the legacy command set.
+#
+# The full protocol is described in the IPS Operators Handbook. 
+#
+# The commands are case-sensitive.
+# Keywords are a maximum of four characters long. Keywords longer than four characters
+# generate an invalid command response.
+# Keywords are separated by a colon: (ASCII 0x3Ah).
+# The maximum line length is 1024 bytes (characters), including line terminators.
+# All command lines are terminated by the new line character \n (ASCII 0x0Ah).
+#
+Terminator = "\n";
+
+# The lagacy timeout values cribbed from OxInstCryojet module - had occasional
+# problems with the default settings with one record timing out and
+# another record seeing the reply - see if longer time out will fix it.
+# Also see if this is still applicable to the SCPI protocol.
+#
+readtimeout = 500;
+replytimeout = 5000;
+locktimeout = 20000;
+PollPeriod = 500;
+ExtraInput = Ignore;
+
+# Device board/slot names
+magnet_temperature_sensor = "MB1.T1"
+level_meter = "DB1.L1"
+magnet_supply = "GRPZ"
+temperature_sensor_10T = "DB8.T1"
+pressure_sensor_10T = "DB5.P1"
+
+#########################################################################################
+# ---------
+# *IDN?
+# ---------
+# IDN:OXFORD INSTRUMENTS:MERCURY dd:ss:ff
+# Where:
+#   dd is the basic instrument type (iPS , iPS, Cryojet etc.)
+#   ss is the serial number of the main board
+#   ff is the firmware version of the instrument
+# Get the unit version information - returns unit type and firmware information.
+# Manual says letter commands always reply with themselves at the start, but
+# found out this one does not.  Manual also shows a copyright symbol, which is not an
+# ASCII symbol and might cause problems for EPICS.  In practice found (c) instead.
+# The %s format grabs the string upto the first space, the %c grabs the rest.  It
+# was too long to fit into one EPICS string record value.
+getVersion { out "*IDN?"; wait 100; in "IDN:%*s:%(\$1MODEL.VAL)s:%*s:%(\$1VERSION.VAL)s"; wait 100;}
+
+#########################################################################################
+# Get demand current (output current) in amps. We are only interested in the Z axis magnet group.
+# The return string is of the form: STAT:DEV:GRPZ:PSU:CURR:<value>:A
+getDemandCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET"; wait 100; in "STAT:DEV:GRPZ:PSU:SIG:CSET:%f:%*s"; wait 100;}
+
+# Get measured power supply voltage in volts
+getSupplyVoltage { out "READ:DEV:" $magnet_supply ":PSU:SIG:VOLT"; wait 100; in "STAT:DEV:READ:DEV:" $magnet_supply ":PSU:SIG:VOLT:%f:%*s"; wait 100;}
+
+# Get measured magnet curren in amps - ER=no.
+getMeasuredMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CURR"; wait 100; in "STAT:DEV:READ:DEV:" $magnet_supply ":PSU:SIG:CURR:%f:%*s"; wait 100;}
+
+# Get set point (target current) in amps ER=yes.
+getSetpointCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:CSET:%f%*s"; wait 100;}
+
+# Get current sweep rate in amps per minute ER=yes.
+getCurrentSweepRate { out "READ:DEV:" $magnet_supply ":PSU:SIG:RCST"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:RCST:%f%*s"; wait 100;}
+
+# Get demand field (output field) in tesla ER=yes.
+getDemandField { out "READ:DEV:" $magnet_supply ":PSU:SIG:FLD"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:FLD:%f%*s"; wait 100;}
+
+# Get set point (target field) in tesla ER=yes.
+getSetpointField { out "READ:DEV:" $magnet_supply "}:PSU:SIG:FSET"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:FSET:%f%*s"; wait 100;}
+
+# Get field sweep rate in tesla per minute ER=yes.
+getFieldSweepRate { out "READ:DEV:" $magnet_supply ":PSU:SIG:RFST"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:RFST:%f%*s"; wait 100;}
+
+# Get software voltage limit in volts ER=no.
+getSoftwareVoltageLimit { out "READ:DEV:" $magnet_supply ":PSU:VLIM"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:VLIM:%f%*s"; wait 100;}
+
+# Get persistent magnet current in amps ER=yes.
+getPersistentMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:PCUR"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:PCUR:%f%*s"; wait 100;}
+
+# Get trip current in amps ER=yes.
+#???
+getTripCurrent { out "R17"; wait 100; in "R%f"; wait 100;}
+
+# Get persistent magnetic field in tesla ER=yes.
+getPersistentMagnetField { out "READ:DEV:" $magnet_supply "}:PSU:SIG:PFLD"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:PFLD:%f%*s"; wait 100;}
+
+# Get trip field in tesla ER=yes.
+#???
+getTripField { out "R19"; wait 100; in "R%f"; wait 100;}
+
+# Get switch heater current in milliamp ER=no.
+getHeaterCurrent { out "READ:DEV:" $magnet_supply ":PSU:SHTC"); wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SHTC:%f%*s"; wait 100;}
+
+# Get safe current limit, most negative in amps ER=no.
+getNegCurrentLimit { out "READ:DEV:" $magnet_supply ":PSU:CLIM"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:CLIM:%f%*s"; wait 100;}
+
+# Get safe current limit, most positive in amps ER=no.
+getPosCurrentLimit { out "READ:DEV:" $magnet_supply ":PSU:CLIM"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:CLIM:%f%*s"; wait 100;}
+
+# Get lead resistance in milliohms ER=no.
+getLeadResistance { out "READ:DEV:{DeviceUID.magnet_temperature_sensor}:TEMP:SIG:RES"); wait 100; in "STAT:DEV:" $magnet_supply ":TEMP:SIG:RES:%f%*s"; wait 100;}
+
+# Get magnet inductance in henry ER=no.
+getMagnetInductance { out "READ:DEV:" $magnet_supply ":PSU:IND"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:IND:%f%*s"; wait 100;}
+
+# Get Activity status (analogous to the legacy A command)
+getActivity { out "READ:DEV:" $magnet_supply ":PSU:ACTN";
+              wait 100;
+              in "STAT:DEV:" $magnet_supply ":PSU:ACTN:%(\$1STS:SYSTEM:FAULT.VAL){HOLD|RTOS|RTOZ|CLMP}";
+              wait 100;}
+
+# Get PSU Status
+getPSUStatus { out "READ:DEV:" $magnet_supply ":PSU:STAT";
+               wait 100;
+               in "STAT:DEV:" $magnet_supply ":PSU:STAT:%(\$1STS:SYSTEM:FAULT.VAL)1u%(\$1STS:SYSTEM:LIMIT.VAL)1u";
+               wait 100;}
+
+# End of list of commands to read parameters.
+#########################################################################################
+# ---------
+# X Command
+# ---------
+# Command to get the status - the IPS returns loads of flags in one command
+#
+# The X command - examine status.
+# According to the manual the reply is of the form
+#
+# XmnAnCnHnMmnPmn
+#
+# where:
+#	X, A, C, H, M and P are literal characters introducing the values for different types of status as follows
+# 	and m and n are integer digits.
+#	X m is the system fault status
+# 		0 Normal
+#  		1 Quenched
+# 		2 Overheated
+#  		4 Warming Up
+#  		8 Fault
+#	X n is the system limiting status
+#		0 Normal
+#		1 On +ve V Limit
+#		2 On -ve V Limit
+#		4 Current too -ve
+#		8 Current too +ve
+#	A n is the activity
+#		0 Hold
+#		1 To Set Point
+#		2 To Zero
+#		4 Clamped
+#	C n is the Local/Remote Control status
+# 		0 Local & Locked
+# 		1 Remote & Locked
+# 		2 Local & Unlocked
+# 		3 Remote & Unlocked
+# 		4 Auto-Run-Down
+# 		5 Auto-Run-Down
+# 		6 Auto-Run-Down
+# 		7 Auto-Run-Down
+#	H n is for the switch heater
+# 		0 Off Mag at 0
+# 		1 On
+# 		2 Off Mag at F
+# 		5 Heater Fault
+# 		8 No Switch
+#	M m is for the sweeping mode parameters
+# 		0 Amps Fast
+# 		1 Tesla Fast
+# 		4 Amps Slow
+# 		5 Tesla Slow
+#	M n is for the sweeping status
+# 		0 At rest
+# 		1 Sweeping
+# 		2 Sweep Limiting
+# 		3 Swping & Lmting
+#	P m and n are for the polarity and has been superseded by signed values on the current and field parameters.
+#	P is present for backward compatibility and can be ignored, so we do.
+#???
+getStatus {
+	out "X"; 
+    wait 100;
+	in 
+	  "X%(\$1STS:SYSTEM:FAULT.VAL)1u%(\$1STS:SYSTEM:LIMIT.VAL)1u"
+	  "A%(\$1ACTIVITY.VAL)1u"
+	  "C%(\$1CONTROL.VAL)1u"
+	  "H%(\$1HEATER:STATUS.VAL)1u"
+	  "M%*1u%(\$1STS:SWEEPMODE:SWEEP.VAL)1u"
+	;
+	wait 100;
+}
+
+# End of examining the status.
+
+# ---------
+# W Command
+# ---------
+# Diddle with the comms wait interval - how long it waits between sending characters.
+# Can vary between 0 and 32767 milliseconds, defaults to zero on power up.
+setWaitInterval { setRemoteUnlocked; out "W%u" ; wait 100; in "W"; wait 100; }
+
+# ---------
+# C Command
+# ---------
+# Set Control mode - grab control of the unit from local users.
+# C0 Local & Locked
+# C1 Remote & Locked
+# C2 Local & Unlocked
+# C3 Remote & Unlocked
+# You cannot set the auto-run-down state read in the status readback - the unit does that.
+setControl { setRemoteUnlocked; out "%{C0|C1|C2|C3}" ; wait 100; in "C"; wait 100; }
+
+# ---------
+# A Command
+# ---------
+# Set the activity - i.e. Make it do something.
+# A0 Hold 
+# A1 To Set Point
+# A2 To Zero
+# A4 Clamp
+setActivity { setRemoteUnlocked; out "A%u" ; wait 100; in "A"; wait 100;}
+
+# ---------
+# F Command
+# ---------
+# Do not want to interfere with Front Panel Display remotely, therefore not bothering with F command.
+
+# ---------
+# H Command
+# ---------
+#
+# Set the status of the heater.
+# 0 = heater off (close switch)
+# 1 = heater on (open switch) [Checks that magnet curr == psu curr before having any effect, so safer]
+# 2 = heater on (open switch) [no checks... UNSAFE! don't use this.]
+#
+setHeaterStatus { setRemoteUnlocked; out "H%{0|1}" ; wait 100; in "H"; wait 100;}
+
+# ---------
+# I Command
+# ---------
+# Set the setpoint (target) current.
+# The precision of the controller is different depending on whether "Extended Resolution" is set or not,
+# but in practice it just ignores extra digit, so we can always use the most resolution for each
+# quantity.
+setSetpointCurrent { setRemoteUnlocked; out "I%#.4f" ; wait 100; in "I"; wait 100;}
+
+# ---------
+# J Command
+# ---------
+# Set the setpoint (target) field.
+setSetpointField { setRemoteUnlocked; out "J%#.5f" ; wait 100; in "J"; wait 100;}
+
+# ---------
+# M Command 
+# ---------
+# Set the mode.
+# Control "Fast/Slow" sweep - and whether units displayed in Current of Field on Front Panel.
+# This is not so straight forwards as it might seem - need to be careful in the template.
+setMode { setRemoteUnlocked; out "M%u" ; wait 100; in "M"; wait 100;}
+
+# ---------
+# P Command
+# ---------
+# Set the polarity.  Not implemented - it is obsolete.
+
+# ---------
+# S Command 
+# ---------
+# Set current sweep rate.
+# Rate at which current will be ramped or swept to target, either the setpoint or zero.
+setCurrentSweeprate { setRemoteUnlocked; out "S%#.3f" ; wait 100; in "S"; wait 100;}
+
+# ---------
+# T Command 
+# ---------
+# Set field sweep rate.
+# Rate at which field will be ramped or swept to target, either the setpoint or zero.
+setFieldSweeprate { setRemoteUnlocked; out "T%#.4f" ; wait 100; in "T"; wait 100;}
+
+# -------------------
+# Y, Z and ~ Commands
+# -------------------
+# Y and Z give access to read and write the RAM, and are protected system commands not intended for customer use.
+# ~ Allows calibration changes to be stored.  Do not want users to have access to these functions.
+# Therefore not bothering with Y, Z or ~ commands.
+
+# ---------
+# ! Command
+# ---------
+# This allows the instrument to be given a number so it will share an RS232 line with a chain of other Oxford Instruments controllers.
+# We are not intending to use the system like this, so will not bother with this command.
