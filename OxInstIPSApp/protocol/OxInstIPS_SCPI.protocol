@@ -48,92 +48,99 @@ pressure_sensor_10T = "DB5.P1";
 # ASCII symbol and might cause problems for EPICS.  In practice found (c) instead.
 # The %s format grabs the string upto the first space, the %c grabs the rest.  It
 # was too long to fit into one EPICS string record value.
-getVersion { out "*IDN?"; wait 100; in "IDN:OXFORD INSTRUMENTS:%(\$1MODEL.VAL)[ a-zA-Z0-9]:%*[ a-zA-Z0-9]:%(\$1VERSION.VAL)s"; wait 100;}
+getVersion { out "*IDN?"; wait 100;
+             in "IDN:OXFORD INSTRUMENTS:%(\$1MODEL.VAL)[ a-zA-Z0-9]:%*[ a-zA-Z0-9]:%(\$1VERSION.VAL)s"; wait 100;}
 
 #########################################################################################
 # Get demand current (output current) in amps. We are only interested in the Z axis magnet group.
 # The return string is of the form: STAT:DEV:GRPZ:PSU:CURR:<value>:A
-getDemandCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET"; wait 100; in "STAT:DEV:GRPZ:PSU:SIG:CSET:%f:%*s"; wait 100;}
+getDemandCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET"; wait 100;
+                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:CSET:%f%*s"; wait 100;}
 
 # Get measured power supply voltage in volts
-getSupplyVoltage { out "READ:DEV:" $magnet_supply ":PSU:SIG:VOLT"; wait 100; in "STAT:DEV:READ:DEV:" $magnet_supply ":PSU:SIG:VOLT:%f:%*s"; wait 100;}
+getSupplyVoltage { out "READ:DEV:" $magnet_supply ":PSU:SIG:VOLT"; wait 100;
+                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:VOLT:%f%*s"; wait 100;}
 
 # Get measured magnet curren in amps - ER=no.
-getMeasuredMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CURR"; wait 100; in "STAT:DEV:READ:DEV:" $magnet_supply ":PSU:SIG:CURR:%f:%*s"; wait 100;}
+getMeasuredMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CURR"; wait 100;
+                           in "STAT:DEV:" $magnet_supply ":PSU:SIG:CURR:%f%*s"; wait 100;}
 
 # Get set point (target current) in amps ER=yes.
-getSetpointCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:CSET:%f%*s"; wait 100;}
+getSetpointCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET"; wait 100;
+                     in "STAT:DEV:" $magnet_supply ":PSU:SIG:CSET:%f%*s"; wait 100;}
 
 # Get current sweep rate in amps per minute ER=yes.
-getCurrentSweepRate { out "READ:DEV:" $magnet_supply ":PSU:SIG:RCST"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:RCST:%f%*s"; wait 100;}
+getCurrentSweepRate { out "READ:DEV:" $magnet_supply ":PSU:SIG:RCST"; wait 100;
+                      in "STAT:DEV:" $magnet_supply ":PSU:SIG:RCST:%f%*s"; wait 100;}
 
 # Get demand field (output field) in tesla ER=yes.
-getDemandField { out "READ:DEV:" $magnet_supply ":PSU:SIG:FLD"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:FLD:%f%*s"; wait 100;}
+getDemandField { out "READ:DEV:" $magnet_supply ":PSU:SIG:FLD"; wait 100;
+                 in "STAT:DEV:" $magnet_supply ":PSU:SIG:FLD:%f%*s"; wait 100;}
 
 # Get set point (target field) in tesla ER=yes.
-getSetpointField { out "READ:DEV:" $magnet_supply ":PSU:SIG:FSET"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:FSET:%f%*s"; wait 100;}
+getSetpointField { out "READ:DEV:" $magnet_supply ":PSU:SIG:FSET"; wait 100;
+                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:FSET:%f%*s"; wait 100;}
 
 # Get field sweep rate in tesla per minute ER=yes.
-getFieldSweepRate { out "READ:DEV:" $magnet_supply ":PSU:SIG:RFST"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:RFST:%f%*s"; wait 100;}
+# Returns status like: STAT:DEV:GRPZ:PSU:SIG:RFST:0.3850T/m
+getFieldSweepRate { out "READ:DEV:" $magnet_supply ":PSU:SIG:RFST"; wait 100;
+                    in "STAT:DEV:" $magnet_supply ":PSU:SIG:RFST:%f%*s"; wait 100;}
 
 # Get software voltage limit in volts ER=no.
-getSoftwareVoltageLimit { out "READ:DEV:" $magnet_supply ":PSU:VLIM"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:VLIM:%f%*s"; wait 100;}
+# The documentation states that a float is returned, but in reality, a string may be returned instead, such as 'N/A'
+getSoftwareVoltageLimit { out "READ:DEV:" $magnet_supply ":PSU:VLIM"; wait 100;
+                          in "STAT:DEV:" $magnet_supply ":PSU:VLIM:%f%*s";  @mismatch{in "%*s";} wait 100;}
 
 # Get persistent magnet current in amps ER=yes.
-getPersistentMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:PCUR"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:PCUR:%f%*s"; wait 100;}
+getPersistentMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:PCUR"; wait 100;
+                             in "STAT:DEV:" $magnet_supply ":PSU:SIG:PCUR:%f%*s"; wait 100;}
 
 # Get trip current in amps ER=yes.
 #???
 getTripCurrent { out "R17"; wait 100; in "R%f"; wait 100;}
 
 # Get persistent magnetic field in tesla ER=yes.
-getPersistentMagnetField { out "READ:DEV:" $magnet_supply ":PSU:SIG:PFLD"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:SIG:PFLD:%f%*s"; wait 100;}
+getPersistentMagnetField { out "READ:DEV:" $magnet_supply ":PSU:SIG:PFLD"; wait 100;
+                           in "STAT:DEV:" $magnet_supply ":PSU:SIG:PFLD:%f%*s"; wait 100;}
 
 # Get trip field in tesla ER=yes.
 #???
 getTripField { out "R19"; wait 100; in "R%f"; wait 100;}
 
 # Get switch heater current in milliamp ER=no.
-getHeaterCurrent { out "READ:DEV:" $magnet_supply ":PSU:SHTC";
-                   wait 100;
-                   in "STAT:DEV:" $magnet_supply ":PSU:SHTC:%f%*s";
-                   wait 100;}
+getHeaterCurrent { out "READ:DEV:" $magnet_supply ":PSU:SHTC"; wait 100;
+                   in "STAT:DEV:" $magnet_supply ":PSU:SHTC:%f%*s"; wait 100;}
 
 # Get safe current limit, most negative in amps ER=no.
-getNegCurrentLimit { out "READ:DEV:" $magnet_supply ":PSU:CLIM"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:CLIM:%f%*s"; wait 100;}
+getNegCurrentLimit { out "READ:DEV:" $magnet_supply ":PSU:CLIM"; wait 100;
+                     in "STAT:DEV:" $magnet_supply ":PSU:CLIM:%f%*s"; wait 100;}
 
 # Get safe current limit, most positive in amps ER=no.
-getPosCurrentLimit { out "READ:DEV:" $magnet_supply ":PSU:CLIM"; wait 100; in "STAT:DEV:" $magnet_supply ":PSU:CLIM:%f%*s"; wait 100;}
+# no units appended to the value, so assume amps.
+getPosCurrentLimit { out "READ:DEV:" $magnet_supply ":PSU:CLIM"; wait 100;
+                     in "STAT:DEV:" $magnet_supply ":PSU:CLIM:%f"; wait 100;}
 
-# Get lead resistance in milliohms ER=no.
-getLeadResistance { out "READ:DEV:" $magnet_temperature_sensor ":TEMP:SIG:RES";
-                    wait 100;
-                    in "STAT:DEV:" $magnet_supply ":TEMP:SIG:RES:%f%*s";
-                    wait 100;}
+# Get lead resistance (PTC/NTC) Ohms.
+# unit appended 'R'
+getLeadResistance { out "READ:DEV:" $magnet_temperature_sensor ":TEMP:SIG:RES"; wait 100;
+                    in "STAT:DEV:" $magnet_temperature_sensor ":TEMP:SIG:RES:%f%*s"; wait 100;}
 
 # Get magnet inductance in henry ER=no.
-getMagnetInductance { out "READ:DEV:" $magnet_supply ":PSU:IND";
-                      wait 100;
-                      in "STAT:DEV:" $magnet_supply ":PSU:IND:%f";
-                      wait 100;}
+# no units appended
+getMagnetInductance { out "READ:DEV:" $magnet_supply ":PSU:IND"; wait 100;
+                      in "STAT:DEV:" $magnet_supply ":PSU:IND:%f"; wait 100;}
 
 # Get Activity status (analogous to the legacy A command)
-getActivity { out "READ:DEV:" $magnet_supply ":PSU:ACTN";
-              wait 100;
-              in "STAT:DEV:" $magnet_supply ":PSU:ACTN:%(\$1ACTIVITY.VAL){HOLD|RTOS|RTOZ|CLMP}";
-              wait 100;}
+getActivity { out "READ:DEV:" $magnet_supply ":PSU:ACTN"; wait 100;
+              in "STAT:DEV:" $magnet_supply ":PSU:ACTN:%(\$1ACTIVITY.VAL){HOLD|RTOS|RTOZ|CLMP}"; wait 100;}
 
-getHeaterStatus { out "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT";
-                  wait 100;
-                  in "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT:%s";
-                  wait 100;}
+getHeaterStatus { out "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT"; wait 100;
+                  in "STAT:DEV:" $magnet_supply ":PSU:SIG:SWHT:%{OFF|ON}"; wait 100;}
 
 # --------------- The following work around limitation of getting legacy status from SCPI protocol -------------
 # Get PSU Status status DWORD
-getMagnetSupplyStatus { out "READ:DEV:" $magnet_supply ":PSU:STAT";
-               wait 100;
-               in "STAT:DEV:" $magnet_supply ":PSU:STAT:%x";
-               wait 100;}
+getMagnetSupplyStatus { out "READ:DEV:" $magnet_supply ":PSU:STAT"; wait 100;
+                        in "STAT:DEV:" $magnet_supply ":PSU:STAT:%x"; wait 100;}
 
 # --------------------------------------------------------------------------------------------------------------
 
@@ -153,10 +160,8 @@ setControl { out "SET:SYS:LOCK%{OFF|SOFT|ON}"; in "READ:SYS:LOCK:%*s";}
 # RTOS -> To Set Point
 # RTOZ -> To Zero
 # CLMP -> Clamp
-setActivity { out "SET:DEV:" $magnet_supply ":PSU:ACTN:%#{HOLD=0|RTOS=1|RTOZ=2|CLMP=4}" ;
-                wait 100;
-                in "READ:DEV:" $magnet_supply ":PSU:ACTN:%*s:VALID";
-                wait 100;}
+setActivity { out "SET:DEV:" $magnet_supply ":PSU:ACTN:%#{HOLD=0|RTOS=1|RTOZ=2|CLMP=4}"; wait 100;
+              in "READ:DEV:" $magnet_supply ":PSU:ACTN:%*s:VALID"; wait 100;}
 
 # ---------
 # SWHT Command
@@ -165,18 +170,21 @@ setActivity { out "SET:DEV:" $magnet_supply ":PSU:ACTN:%#{HOLD=0|RTOS=1|RTOZ=2|C
 # Set the status of the heater.
 # 0 = heater off (close switch)
 # 1 = heater on (open switch) [Checks that magnet curr == psu curr before having any effect, so safer]
+# Returns status of this form: STAT:SET:DEV:GRPZ:PSU:SIG:SWHT:OFF:VALID
 # DO NOT USE SWHN command!!
 #
-setHeaterStatus { out "SET:DEV:" $magnet_supply ":PSU:SIG:SWHT:%#{OFF=0|ON=1}";
-                  wait 100;
-                  in "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT:%s";
-                  wait 100;}
+setHeaterStatus { out "SET:DEV:" $magnet_supply ":PSU:SIG:SWHT:%#{OFF=0|ON=1}"; wait 100;
+                  in "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT:%*s"; wait 100;}
 
 # Set the setpoint (target) current.
-setSetpointCurrent { out "SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%#.4f"; wait 100; in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%f:%*s"}
+# Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:CSET:0.0004:VALID
+setSetpointCurrent { out "SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%#.4f"; wait 100;
+                     in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%f:%*s"}
 
 # Set the setpoint (target) field.
-setSetpointField { out "SET:DEV:" $magnet_supply ":PSU:SIG:FLD:%#.5f"; wait 100; in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:FLD:%f%*s"}
+# Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:FSET:0.00:VALID
+setSetpointField { out "SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%#.5f"; wait 100;
+                   in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%f%*s"}
 
 # ---------
 # M Command
@@ -188,8 +196,12 @@ setMode { setRemoteUnlocked; out "M%u" ; wait 100; in "M"; wait 100;}
 
 # Set current sweep rate.
 # Rate at which current will be ramped or swept to target, either the setpoint or zero.
-setCurrentSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%#.3f"; wait 100; in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%f%*s"}
+# Returns status like: STAT:DEV:GRPZ:PSU:SIG:RCST:5.5:VALID
+setCurrentSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%#.3f"; wait 100;
+                      in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%f%*s"}
 
 # Set field sweep rate.
 # Rate at which field will be ramped or swept to target, either the setpoint or zero.
-setFieldSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%#.3f"; wait 100; in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%f%*s"}
+# Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:RFST:0.3850:VALID
+setFieldSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%#.3f"; wait 100;
+                    in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%f%*s"}
