@@ -150,7 +150,10 @@ getMagnetSupplyStatus { out "READ:DEV:" $magnet_supply ":PSU:STAT"; wait 100;
 # ---------
 # Set Control mode - grab control of the unit from local users.
 # OFF | SOFT | ON
-setControl { out "SET:SYS:LOCK%{OFF|SOFT|ON}"; in "READ:SYS:LOCK:%*s";}
+# With a real device, this command always replies: STAT:SET:SYS:LOCK:OFF:DENIED
+# where 'OFF' may be 'OFF', 'ON' or 'SOFT'.
+# It's also not possible to read the LOCK status. So this feature might be totally useless.
+setControl { out "SET:SYS:LOCK:%{OFF|SOFT|ON}"; in "READ:SYS:LOCK:%*s";}
 
 # ---------
 # DEV:<UID>:PSU:ACTN

@@ -7,7 +7,6 @@ class Activity(Enum):
     TO_ZERO = "To Zero"
     CLAMP = "Clamped"
 
-
 class Control(Enum):
     LOCAL_LOCKED = "Local & Locked"
     REMOTE_LOCKED = "Remote & Unlocked"

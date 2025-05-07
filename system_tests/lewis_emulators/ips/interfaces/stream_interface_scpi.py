@@ -7,10 +7,10 @@ from lewis_emulators.ips.modes_scpi import Activity, Control
 from ..device_scpi import amps_to_tesla, tesla_to_amps
 
 MODE_MAPPING = {
-    0: Activity.HOLD,
-    1: Activity.TO_SETPOINT,
-    2: Activity.TO_ZERO,
-    4: Activity.CLAMP,
+    'HOLD': Activity.HOLD,
+    'RTOS': Activity.TO_SETPOINT,
+    'RTOZ': Activity.TO_ZERO,
+    'CLMP': Activity.CLAMP,
 }
 
 CONTROL_MODE_MAPPING = {
@@ -28,7 +28,8 @@ class DeviceUID:
     magnet_temperature_sensor = "MB1.T1"
     level_meter = "DB1.L1"
     magnet_supply = "GRPZ"
-    temperature_sensor_10T = "DB8.T1"
+    # temperature_sensor_10T = "DB8.T1"
+    temperature_sensor_10T = "MB1.T1"
     pressure_sensor_10T = "DB5.P1"
 
 
@@ -67,10 +68,10 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("get_magnet_inductance").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:IND").eos().build(),
         CmdBuilder("get_heater_status").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT").eos().build(),
         CmdBuilder("get_bipolar_mode").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:BIPL").eos().build(),
-        CmdBuilder("set_mode").escape(f"SET:DEV:{DeviceUID.magnet_supply}:ACTN:").string().eos().build(),
+        CmdBuilder("set_mode").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:").string().eos().build(),
         CmdBuilder("set_current").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CSET:").float().eos().build(),
-        CmdBuilder("set_field").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:FSET").float().eos().build(),
-        CmdBuilder("set_field_sweep_rate").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:RFST").float().eos().build(),
+        CmdBuilder("set_field").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:FSET:").float().eos().build(),
+        CmdBuilder("set_field_sweep_rate").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:").float().eos().build(),
         CmdBuilder("set_heater_on").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT:ON").eos().build(),
         CmdBuilder("set_heater_off").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT:OFF").eos().build(),
         CmdBuilder("set_bipolar_mode").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:BIPL:").string().eos().build(),
@@ -108,13 +109,13 @@ class IpsStreamInterface(StreamInterface):
     def get_mode(self):
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{self.device.activity.value}"
 
-    def set_mode(self, mode):
-        mode = int(mode)
+    def set_mode(self, mode: str):
+        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{self.device.activity.value}:VALID"
         try:
-            self.device.activity = MODE_MAPPING[mode]
+            self.device.activity = Activity[mode]
         except KeyError:
+            ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{mode}:INVALID"
             raise ValueError("Invalid mode specified")
-        return "A"
 
     def get_magnet_supply_status(self):
         """
@@ -148,65 +149,66 @@ class IpsStreamInterface(StreamInterface):
         return resp
 
     def get_current_setpoint(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CURR:{self.device.current_setpoint}:A"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CSET:{self.device.current_setpoint:.4f}A"
 
     def get_supply_voltage(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:VOLT:{self.device.get_voltage()}:V"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:VOLT:{self.device.get_voltage():.4f}V"
 
     def get_measured_current(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RCUR:{self.device.measured_current}:A"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RCUR:{self.device.measured_current:.4f}A"
 
     def get_current(self):
         """Gets the demand current of the PSU."""
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CURR:{self.device.current}:A"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CURR:{self.device.current:.4f}A"
 
     def get_current_sweep_rate(self):
         # Unsure as to whether units are returned?
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RCST:{self.device.current_ramp_rate}"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RCST:{self.device.current_ramp_rate:.4f}A/m"
 
     def get_field(self):
-        return f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FSET:{amps_to_tesla(self.device.current)}:VALID"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FLD:{amps_to_tesla(self.device.current):.4f}T"
 
     def get_field_setpoint(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FLD:{amps_to_tesla(self.device.current_setpoint)}:T"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FSET:{amps_to_tesla(self.device.current_setpoint):.4f}T"
 
     def get_field_sweep_rate(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{amps_to_tesla(self.device.current_ramp_rate)}:T"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{amps_to_tesla(self.device.current_ramp_rate):.4f}T/m"
 
     def get_software_voltage_limit(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:VLIM:{self.device.voltage_limit}:V"
+        # According to the manual, this should return with a unit ":V" suffix, but in reality it does not.
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:VLIM:{self.device.voltage_limit}"
 
     def get_persistent_magnet_current(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:PCUR:{self.device.magnet_current}:A"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:PCUR:{self.device.magnet_current:.4f}A"
 
     # TBD
     def get_trip_current(self):
         return f"R{self.device.trip_current}"
 
     def get_persistent_magnet_field(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:PFLD:{amps_to_tesla(self.device.magnet_current)}:T"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:PFLD:{amps_to_tesla(self.device.magnet_current):.4f}T"
 
     # TBD
     def get_trip_field(self):
         return f"R{amps_to_tesla(self.device.trip_current)}"
 
     def get_heater_current(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SHTC:{self.device.heater_current}:mA"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SHTC:{self.device.heater_current:.4f}mA"
 
     def get_neg_current_limit(self):
-        ret = f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:CLIM:{self.device.neg_current_limit}:A"
+        ret = f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:CLIM:{self.device.neg_current_limit:.4f}"
         return ret
 
     def get_pos_current_limit(self):
-        ret = f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:CLIM:{self.device.pos_current_limit}:A"
+        ret = f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:CLIM:{self.device.pos_current_limit:.4f}"
         return ret
 
     def get_lead_resistance(self):
-        ret = f"STAT:DEV:{DeviceUID.magnet_temperature_sensor}:TEMP:SIG:RES:{self.device.lead_resistance}:Ohm"
+        ret = f"STAT:DEV:{DeviceUID.magnet_temperature_sensor}:TEMP:SIG:RES:{self.device.lead_resistance:.4f}R"
         return ret
 
     def get_magnet_inductance(self):
-        ret = f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:IND:{self.device.inductance}:H"
+        ret = f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:IND:{self.device.inductance:.4f}"
         return ret
 
     def get_heater_status(self):
@@ -217,11 +219,11 @@ class IpsStreamInterface(StreamInterface):
 
     def set_current(self, current):
         self.device.current_setpoint = float(current)
-        return f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CSET:{current}:VALID"
+        return f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CSET:{current:1.4f}:VALID"
 
-    def set_field(self, current):
-        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FLD:{f'amps_to_tesla(float(current)):.5f'}:VALID"
-        self.device.current_setpoint = tesla_to_amps(float(current))
+    def set_field(self, field):
+        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FSET:{float(field):.4f}:VALID"
+        self.device.current_setpoint = tesla_to_amps(float(field))
         return ret
 
     def set_heater_on(self):
@@ -236,7 +238,7 @@ class IpsStreamInterface(StreamInterface):
 
     def set_field_sweep_rate(self, tesla):
         self.device.current_ramp_rate = tesla_to_amps(float(tesla))
-        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:RFST:{f'tesla:.3f'}:VALID"
+        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{float(tesla):1.4f}:VALID"
         return ret
 
     def set_bipolar_mode(self, mode):
