@@ -17,10 +17,10 @@ IOCS = [
         "name": DEVICE_PREFIX,
         "directory": get_default_ioc_dir("IPS"),
         "emulator": EMULATOR_NAME,
-        "lewis_protocol": "ips_scpi",
+        "lewis_protocol": "ips_legacy",
         "ioc_launcher_class": ProcServLauncher,
         "macros": {
-            "STREAMPROTOCOL": "SCPI",
+            "STREAMPROTOCOL": "LEGACY",
             "MANAGER_ASG": "DEFAULT",
             "MAX_SWEEP_RATE": "1.0",
             "HEATER_WAITTIME": "10",  # On a real system the macro has a default of 60s,
