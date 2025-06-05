@@ -52,16 +52,19 @@ getVersion { out "*IDN?"; wait 100;
              in "IDN:OXFORD INSTRUMENTS:%(\$1MODEL.VAL)[ a-zA-Z0-9]:%*[ a-zA-Z0-9]:%(\$1VERSION.VAL)s"; wait 100;}
 
 #########################################################################################
-# Get demand current (output current) in amps. We are only interested in the Z axis magnet group.
-# The return string is of the form: STAT:DEV:GRPZ:PSU:CURR:<value>:A
-getDemandCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET"; wait 100;
-                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:CSET:%f%*s"; wait 100;}
 
 # Get measured power supply voltage in volts
+# The return string is of the form: STAT:DEV:GRPZ:PSU:SIG:VOLT:-0.0002V
 getSupplyVoltage { out "READ:DEV:" $magnet_supply ":PSU:SIG:VOLT"; wait 100;
                    in "STAT:DEV:" $magnet_supply ":PSU:SIG:VOLT:%f%*s"; wait 100;}
 
+# Get demand current (output current) in amps. We are only interested in the Z axis magnet group.
+# The return string is of the form: STAT:DEV:GRPZ:PSU:CSET:<value>:A
+getDemandCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET"; wait 100;
+                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:CSET:%f%*s"; wait 100;}
+
 # Get measured magnet curren in amps - ER=no.
+# The return string is of the form: STAT:DEV:GRPZ:PSU:SIG:CURR:-0.0001A
 getMeasuredMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CURR"; wait 100;
                            in "STAT:DEV:" $magnet_supply ":PSU:SIG:CURR:%f%*s"; wait 100;}
 
@@ -95,17 +98,9 @@ getSoftwareVoltageLimit { out "READ:DEV:" $magnet_supply ":PSU:VLIM"; wait 100;
 getPersistentMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:PCUR"; wait 100;
                              in "STAT:DEV:" $magnet_supply ":PSU:SIG:PCUR:%f%*s"; wait 100;}
 
-# Get trip current in amps ER=yes.
-#???
-getTripCurrent { out "R17"; wait 100; in "R%f"; wait 100;}
-
 # Get persistent magnetic field in tesla ER=yes.
 getPersistentMagnetField { out "READ:DEV:" $magnet_supply ":PSU:SIG:PFLD"; wait 100;
                            in "STAT:DEV:" $magnet_supply ":PSU:SIG:PFLD:%f%*s"; wait 100;}
-
-# Get trip field in tesla ER=yes.
-#???
-getTripField { out "R19"; wait 100; in "R%f"; wait 100;}
 
 # Get switch heater current in milliamp ER=no.
 getHeaterCurrent { out "READ:DEV:" $magnet_supply ":PSU:SHTC"; wait 100;
@@ -132,7 +127,7 @@ getMagnetInductance { out "READ:DEV:" $magnet_supply ":PSU:IND"; wait 100;
 
 # Get Activity status (analogous to the legacy A command)
 getActivity { out "READ:DEV:" $magnet_supply ":PSU:ACTN"; wait 100;
-              in "STAT:DEV:" $magnet_supply ":PSU:ACTN:%(\$1ACTIVITY.VAL){HOLD|RTOS|RTOZ|CLMP}"; wait 100;}
+              in "STAT:DEV:" $magnet_supply ":PSU:ACTN:%#{HOLD=0|RTOS=1|RTOZ=2|CLMP=4}"; wait 100;}
 
 getHeaterStatus { out "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT"; wait 100;
                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:SWHT:%{OFF|ON}"; wait 100;}
@@ -164,7 +159,7 @@ setControl { out "SET:SYS:LOCK:%{OFF|SOFT|ON}"; in "READ:SYS:LOCK:%*s";}
 # RTOZ -> To Zero
 # CLMP -> Clamp
 setActivity { out "SET:DEV:" $magnet_supply ":PSU:ACTN:%#{HOLD=0|RTOS=1|RTOZ=2|CLMP=4}"; wait 100;
-              in "READ:DEV:" $magnet_supply ":PSU:ACTN:%*s:VALID"; wait 100;}
+              in "STAT:SET:DEV:" $magnet_supply ":PSU:ACTN:%*s"; wait 100;}
 
 # ---------
 # SWHT Command
@@ -177,7 +172,7 @@ setActivity { out "SET:DEV:" $magnet_supply ":PSU:ACTN:%#{HOLD=0|RTOS=1|RTOZ=2|C
 # DO NOT USE SWHN command!!
 #
 setHeaterStatus { out "SET:DEV:" $magnet_supply ":PSU:SIG:SWHT:%#{OFF=0|ON=1}"; wait 100;
-                  in "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT:%*s"; wait 100;}
+                  in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:SWHT:%*s"; wait 100;}
 
 # Set the setpoint (target) current.
 # Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:CSET:0.0004:VALID
@@ -189,14 +184,6 @@ setSetpointCurrent { out "SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%#.4f"; wait 1
 setSetpointField { out "SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%#.5f"; wait 100;
                    in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%f%*s"}
 
-# ---------
-# M Command
-# ---------
-# Set the mode.
-# Control "Fast/Slow" sweep - and whether units displayed in Current of Field on Front Panel.
-# This is not so straight forwards as it might seem - need to be careful in the template.
-setMode { setRemoteUnlocked; out "M%u" ; wait 100; in "M"; wait 100;}
-
 # Set current sweep rate.
 # Rate at which current will be ramped or swept to target, either the setpoint or zero.
 # Returns status like: STAT:DEV:GRPZ:PSU:SIG:RCST:5.5:VALID
@@ -206,5 +193,5 @@ setCurrentSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%#.3f"; wait 
 # Set field sweep rate.
 # Rate at which field will be ramped or swept to target, either the setpoint or zero.
 # Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:RFST:0.3850:VALID
-setFieldSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%#.3f"; wait 100;
+setFieldSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%#.4f"; wait 100;
                     in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%f%*s"}

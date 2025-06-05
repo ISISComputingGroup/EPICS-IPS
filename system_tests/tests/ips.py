@@ -1,6 +1,7 @@
 import unittest
 from .ips_common import IpsBaseTests
 
+from parameterized import parameterized
 from utils.channel_access import ChannelAccess
 from utils.ioc_launcher import ProcServLauncher, get_default_ioc_dir
 from utils.test_modes import TestModes
@@ -95,3 +96,57 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
 
         # Wait for statemachine to reach "at field" state before every test.
         self.ca.assert_that_pv_is("STATEMACHINE", "At field")
+
+    def _assert_heater_is(self, heater_state):
+        self.ca.assert_that_pv_is("HEATER:STATUS:SP", "On" if heater_state else "Off")
+        if heater_state:
+            self.ca.assert_that_pv_is(
+                "HEATER:STATUS",
+                "On",
+            )
+        else:
+            self.ca.assert_that_pv_is_one_of("HEATER:STATUS", HEATER_OFF_STATES)
+
+    @parameterized.expand(field for field in parameterized_list(TEST_VALUES))
+    def test_GIVEN_magnet_quenches_while_at_field_THEN_ioc_displays_this_quench_in_statuses(
+        self, _, field
+    ):
+        self._set_and_check_persistent_mode(False)
+        self.ca.set_pv_value("FIELD:SP", field)
+        self._assert_field_is(field)
+        self.ca.assert_that_pv_is("STATEMACHINE", "At field")
+
+        with self._backdoor_magnet_quench():
+            self.ca.assert_that_pv_is("STS:SYSTEM:FAULT", "Quenched")
+            self.ca.assert_that_pv_alarm_is("STS:SYSTEM:FAULT", self.ca.Alarms.MAJOR)
+            self.ca.assert_that_pv_is("CONTROL", "Auto-Run-Down")
+            self.ca.assert_that_pv_alarm_is("CONTROL", self.ca.Alarms.MAJOR)
+
+            # The trip field should be the field at the point when the magnet quenched.
+            self.ca.assert_that_pv_is_number("FIELD:TRIP", field, tolerance=TOLERANCE)
+
+            # Field should be set to zero by emulator (mirroring what the field ought to do in the real device)
+            self.ca.assert_that_pv_is_number("FIELD", 0, tolerance=TOLERANCE)
+            self.ca.assert_that_pv_is_number("FIELD:USER", 0, tolerance=TOLERANCE)
+            self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", 0, tolerance=TOLERANCE)
+
+    # These tests for locking and unlocking the remote control are only applicable
+    # to the legacy protocol. SCPI does not have a remote control lock.
+    @parameterized.expand(
+        control_command for control_command in parameterized_list(CONTROL_COMMANDS_WITH_VALUES)
+    )
+    def test_WHEN_control_command_value_set_THEN_remote_unlocked_set(
+        self, _, control_pv, set_value
+    ):
+        self.ca.set_pv_value("CONTROL", "Local & Locked")
+        self.ca.set_pv_value(control_pv, set_value)
+        self.ca.assert_that_pv_is("CONTROL", "Remote & Unlocked")
+
+    @parameterized.expand(
+        control_pv for control_pv in parameterized_list(CONTROL_COMMANDS_WITHOUT_VALUES)
+    )
+    def test_WHEN_control_command_processed_THEN_remote_unlocked_set(self, _, control_pv):
+        self.ca.set_pv_value("CONTROL", "Local & Locked")
+        self.ca.process_pv(control_pv)
+        self.ca.assert_that_pv_is("CONTROL", "Remote & Unlocked")
+

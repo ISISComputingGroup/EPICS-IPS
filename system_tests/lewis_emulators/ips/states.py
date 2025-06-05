@@ -1,7 +1,7 @@
 from lewis.core import approaches
 from lewis.core.statemachine import State
 
-from lewis_emulators.ips.modes import Activity
+from .modes import Activity
 
 SECS_PER_MIN = 60
 
@@ -22,9 +22,9 @@ class HeaterOnState(State):
             device.quench("PSU ramp rate is too high")
         elif abs(device.current - device.magnet_current) > device.QUENCH_CURRENT_DELTA * dt:
             device.quench(
-                "Difference between PSU current ({}) and magnet current ({}) is higher than allowed ({})".format(
-                    device.current, device.magnet_current, device.QUENCH_CURRENT_DELTA * dt
-                )
+                f"Difference between PSU current ({device.current})"
+                f" and magnet current ({device.magnet_current})"
+                f" is higher than allowed ({device.QUENCH_CURRENT_DELTA * dt})"
             )
 
         elif device.activity == Activity.TO_SETPOINT:
@@ -37,7 +37,8 @@ class HeaterOnState(State):
 
         elif device.activity == Activity.TO_ZERO:
             device.current = approaches.linear(device.current, 0, curr_ramp_rate, dt)
-            device.magnet_current = approaches.linear(device.magnet_current, 0, curr_ramp_rate, dt)
+            device.magnet_current = approaches.linear(device.magnet_current,
+                                                      0, curr_ramp_rate, dt)
 
 
 class HeaterOffState(State):

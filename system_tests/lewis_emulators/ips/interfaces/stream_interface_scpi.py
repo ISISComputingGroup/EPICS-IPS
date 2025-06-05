@@ -2,9 +2,9 @@ from lewis.adapters.stream import StreamInterface
 from lewis.core.logging import has_log
 from lewis.utils.command_builder import CmdBuilder
 
-from lewis_emulators.ips.modes_scpi import Activity, Control
+from ..modes import Activity, Control
 
-from ..device_scpi import amps_to_tesla, tesla_to_amps
+from ..device import amps_to_tesla, tesla_to_amps
 
 MODE_MAPPING = {
     'HOLD': Activity.HOLD,
@@ -44,10 +44,10 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("get_version").escape("*IDN?").eos().build(),
         # CmdBuilder("set_comms_mode").escape("Q4").eos().build(),
         CmdBuilder("get_magnet_supply_status").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:STAT").eos().build(),
-        CmdBuilder("get_mode").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:ACTN").eos().build(),
+        CmdBuilder("get_activity").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:ACTN").eos().build(),
         CmdBuilder("get_current").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CURR").eos().build(),
         CmdBuilder("get_supply_voltage").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:VOLT").eos().build(),
-        CmdBuilder("get_measured_current").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RCUR").eos().build(),
+        # CmdBuilder("get_measured_current").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CURR").eos().build(),
         CmdBuilder("get_current_setpoint").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CSET").eos().build(),
         CmdBuilder("get_current_sweep_rate").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RCST").eos().build(),
         CmdBuilder("get_field").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FLD").eos().build(),
@@ -68,9 +68,9 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("get_magnet_inductance").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:IND").eos().build(),
         CmdBuilder("get_heater_status").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT").eos().build(),
         CmdBuilder("get_bipolar_mode").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:BIPL").eos().build(),
-        CmdBuilder("set_mode").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:").string().eos().build(),
+        CmdBuilder("set_activity").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:").string().eos().build(),
         CmdBuilder("set_current").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CSET:").float().eos().build(),
-        CmdBuilder("set_field").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:FSET:").float().eos().build(),
+        CmdBuilder("set_field").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FSET:").float().eos().build(),
         CmdBuilder("set_field_sweep_rate").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:").float().eos().build(),
         CmdBuilder("set_heater_on").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT:ON").eos().build(),
         CmdBuilder("set_heater_off").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT:OFF").eos().build(),
@@ -106,16 +106,32 @@ class IpsStreamInterface(StreamInterface):
         self.device.control = CONTROL_MODE_MAPPING[mode]
         return "C"
 
-    def get_mode(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{self.device.activity.value}"
+    def get_activity(self):
+        for testmode in MODE_MAPPING:
+            if self.device.activity == MODE_MAPPING[testmode]:
+                break
+        mode = self.device.activity.name
+        self.log.info("stream_interface_scpi: get_activity() self.device.activity.name = {} self.device.activity.value = {}".format(self.device.activity.name, self.device.activity.value))
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{testmode}"
 
-    def set_mode(self, mode: str):
-        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{self.device.activity.value}:VALID"
+    def set_activity(self, mode: str):
+        found_mode = False
+        # Set the default return value to invalid (guilty until proven innocent)
+        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{mode}:INVALID"
+        
+        for testmode in MODE_MAPPING:
+            if mode == MODE_MAPPING[testmode].value:
+                found_mode = True
+                break
+                
         try:
-            self.device.activity = Activity[mode]
+            self.device.activity = MODE_MAPPING[mode]
+            ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{mode}:VALID"
+            self.log.info(f"stream_interface_scpi: set_activity() ret = {ret}")
         except KeyError:
             ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{mode}:INVALID"
             raise ValueError("Invalid mode specified")
+        return ret
 
     def get_magnet_supply_status(self):
         """
@@ -145,7 +161,7 @@ class IpsStreamInterface(StreamInterface):
             This information is not published and was derived from
             direct questions to Oxford Instruments.
         """
-        resp = f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:STAT:{self.device.magnet_supply_status.value:08x}"
+        resp = f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:STAT:{self.device.magnet_supply_status:08x}"
         return resp
 
     def get_current_setpoint(self):
@@ -154,15 +170,16 @@ class IpsStreamInterface(StreamInterface):
     def get_supply_voltage(self):
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:VOLT:{self.device.get_voltage():.4f}V"
 
-    def get_measured_current(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RCUR:{self.device.measured_current:.4f}A"
+#    def get_measured_current(self):
+#        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CURR:{self.device.measured_current:.4f}A"
 
     def get_current(self):
         """Gets the demand current of the PSU."""
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CURR:{self.device.current:.4f}A"
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CURR:{self.device.measured_current:.4f}A"
 
     def get_current_sweep_rate(self):
-        # Unsure as to whether units are returned?
+        # Returns the current ramp rate in amps per second.
+        # of the form: STAT:DEV:GRPZ:PSU:SIG:RCST:5.3612A/m
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RCST:{self.device.current_ramp_rate:.4f}A/m"
 
     def get_field(self):
@@ -172,7 +189,12 @@ class IpsStreamInterface(StreamInterface):
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FSET:{amps_to_tesla(self.device.current_setpoint):.4f}T"
 
     def get_field_sweep_rate(self):
-        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{amps_to_tesla(self.device.current_ramp_rate):.4f}T/m"
+        field = amps_to_tesla(self.device.current_ramp_rate)
+        self.log.info(f"stream_interface_scpi: get_field_sweep_rate()" 
+                      f" field = {field:.4f}"
+                      f" device.current_ramp_rate = {self.device.current_ramp_rate:.4f}"
+                      )
+        return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{field:.4f}T/m"
 
     def get_software_voltage_limit(self):
         # According to the manual, this should return with a unit ":V" suffix, but in reality it does not.
@@ -236,9 +258,13 @@ class IpsStreamInterface(StreamInterface):
         ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT:OFF:VALID"
         return ret
 
-    def set_field_sweep_rate(self, tesla):
-        self.device.current_ramp_rate = tesla_to_amps(float(tesla))
-        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{float(tesla):1.4f}:VALID"
+    def set_field_sweep_rate(self, tesla_per_min):
+        self.device.current_ramp_rate = tesla_to_amps(tesla_per_min)
+        self.log.info(f"stream_interface_scpi: set_field_sweep_rate()" 
+                      f" tesla = {tesla_per_min:.4f}"
+                      f" device.current_ramp_rate = {self.device.current_ramp_rate:.4f}"
+                      )
+        ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{float(tesla_per_min):1.4f}:VALID"
         return ret
 
     def set_bipolar_mode(self, mode):

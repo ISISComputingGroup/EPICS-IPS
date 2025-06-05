@@ -72,16 +72,10 @@ class IpsBaseTests(object, metaclass=ABCMeta):
             self.ca.assert_that_pv_value_is_unchanged("FIELD:USER", wait=30)
             self.ca.assert_that_pv_is_number("FIELD:USER", field, tolerance=TOLERANCE, timeout=10)
 
+    @abstractmethod
     def _assert_heater_is(self, heater_state):
-        self.ca.assert_that_pv_is("HEATER:STATUS:SP", "On" if heater_state else "Off")
-        if heater_state:
-            self.ca.assert_that_pv_is(
-                "HEATER:STATUS",
-                "On",
-            )
-        else:
-            self.ca.assert_that_pv_is_one_of("HEATER:STATUS", HEATER_OFF_STATES)
-
+        pass
+    
     def _set_and_check_persistent_mode(self, mode):
         self.ca.assert_setting_setpoint_sets_readback("YES" if mode else "NO", "PERSISTENT")
 
@@ -190,29 +184,6 @@ class IpsBaseTests(object, metaclass=ABCMeta):
             # Wait for IOC to notice quench state has gone away
             self.ca.assert_that_pv_alarm_is("STS:SYSTEM:FAULT", self.ca.Alarms.NONE)
 
-    @parameterized.expand(field for field in parameterized_list(TEST_VALUES))
-    def test_GIVEN_magnet_quenches_while_at_field_THEN_ioc_displays_this_quench_in_statuses(
-        self, _, field
-    ):
-        self._set_and_check_persistent_mode(False)
-        self.ca.set_pv_value("FIELD:SP", field)
-        self._assert_field_is(field)
-        self.ca.assert_that_pv_is("STATEMACHINE", "At field")
-
-        with self._backdoor_magnet_quench():
-            self.ca.assert_that_pv_is("STS:SYSTEM:FAULT", "Quenched")
-            self.ca.assert_that_pv_alarm_is("STS:SYSTEM:FAULT", self.ca.Alarms.MAJOR)
-            self.ca.assert_that_pv_is("CONTROL", "Auto-Run-Down")
-            self.ca.assert_that_pv_alarm_is("CONTROL", self.ca.Alarms.MAJOR)
-
-            # The trip field should be the field at the point when the magnet quenched.
-            self.ca.assert_that_pv_is_number("FIELD:TRIP", field, tolerance=TOLERANCE)
-
-            # Field should be set to zero by emulator (mirroring what the field ought to do in the real device)
-            self.ca.assert_that_pv_is_number("FIELD", 0, tolerance=TOLERANCE)
-            self.ca.assert_that_pv_is_number("FIELD:USER", 0, tolerance=TOLERANCE)
-            self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", 0, tolerance=TOLERANCE)
-
     @parameterized.expand(val for val in parameterized_list(TEST_VALUES))
     def test_WHEN_inductance_set_via_backdoor_THEN_value_in_ioc_updates(self, _, val):
         self._lewis.backdoor_set_on_device("inductance", val)
@@ -225,8 +196,10 @@ class IpsBaseTests(object, metaclass=ABCMeta):
 
     @parameterized.expand(val for val in parameterized_list(TEST_SWEEP_RATES))
     def test_WHEN_sweep_rate_set_THEN_sweep_rate_on_ioc_updates(self, _, val):
+        print(f"test_WHEN_sweep_rate_set_THEN_sweep_rate_on_ioc_updates: Setting sweep rate to {val}")
         self.ca.set_pv_value("FIELD:RATE:SP", val)
         self.ca.assert_that_pv_is_number("FIELD:RATE:SP", val, tolerance=TOLERANCE)
+        print(f"test_WHEN_sweep_rate_set_THEN_sweep_rate_on_ioc_updates: FIELD:RATE:SP readback OK")
         self.ca.assert_that_pv_is_number("FIELD:RATE", val, tolerance=TOLERANCE)
         self.ca.assert_that_pv_alarm_is("FIELD:RATE", self.ca.Alarms.NONE)
 
@@ -235,29 +208,16 @@ class IpsBaseTests(object, metaclass=ABCMeta):
     def test_WHEN_activity_set_via_backdoor_to_clamped_THEN_alarm_major_ELSE_no_alarm(
         self, _, activity_state
     ):
-        self.ca.set_pv_value("ACTIVITY", activity_state)
+        if activity_state == "Clamped":
+            self.ca.set_pv_value("ACTIVITY:SP", "Clamp")
+        else:
+            self.ca.set_pv_value("ACTIVITY:SP", activity_state)
+            
+        self.ca.assert_that_pv_is("ACTIVITY", activity_state)
         if activity_state == "Clamped":
             self.ca.assert_that_pv_alarm_is("ACTIVITY", "MAJOR")
         else:
             self.ca.assert_that_pv_alarm_is("ACTIVITY", "NO_ALARM")
-
-    @parameterized.expand(
-        control_command for control_command in parameterized_list(CONTROL_COMMANDS_WITH_VALUES)
-    )
-    def test_WHEN_control_command_value_set_THEN_remote_unlocked_set(
-        self, _, control_pv, set_value
-    ):
-        self.ca.set_pv_value("CONTROL", "Local & Locked")
-        self.ca.set_pv_value(control_pv, set_value)
-        self.ca.assert_that_pv_is("CONTROL", "Remote & Unlocked")
-
-    @parameterized.expand(
-        control_pv for control_pv in parameterized_list(CONTROL_COMMANDS_WITHOUT_VALUES)
-    )
-    def test_WHEN_control_command_processed_THEN_remote_unlocked_set(self, _, control_pv):
-        self.ca.set_pv_value("CONTROL", "Local & Locked")
-        self.ca.process_pv(control_pv)
-        self.ca.assert_that_pv_is("CONTROL", "Remote & Unlocked")
 
     # original problem/complaint:
     # in non-persistent mode, heater wait time always implemented, therefore too slow to set new fields

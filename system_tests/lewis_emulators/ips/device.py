@@ -3,7 +3,7 @@ from collections import OrderedDict
 from lewis.core.logging import has_log
 from lewis.devices import StateMachineDevice
 
-from lewis_emulators.ips.modes import Activity, Control, Mode, SweepMode
+from .modes import Activity, Control, Mode, SweepMode, MagnetSupplyStatus
 
 from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState
 
@@ -22,6 +22,13 @@ def amps_to_tesla(amps):
 def tesla_to_amps(tesla):
     return tesla / LOAD_LINE_GRADIENT
 
+def set_bit_value(value, bit_value):
+    """Sets a bit at the position implied by the value."""
+    return value | bit_value
+
+def clear_bit_value(value, bit_value):
+    """Clears a bit at the specified position implied by the value."""
+    return value & ~bit_value
 
 @has_log
 class SimulatedIps(StateMachineDevice):
@@ -93,12 +100,20 @@ class SimulatedIps(StateMachineDevice):
         self.control: Control = Control.LOCAL_LOCKED
 
         # The only sweep mode we are interested in is tesla fast
+        # This appears to be unsupported by the SCPI protocol, so the
+        # corresponding EPICS records have been removed in the SCPI database template
         self.sweep_mode: SweepMode = SweepMode.TESLA_FAST
 
         # Not sure what is the sensible value here
         self.mode: Mode = Mode.SLOW
 
+        # SCPI mode specific
         self.bipolar: bool = True
+
+        self.magnet_supply_status = MagnetSupplyStatus.OK
+
+        self.voltage_limit: float = 10.0
+
 
     def _get_state_handlers(self):
         return {
@@ -130,9 +145,13 @@ class SimulatedIps(StateMachineDevice):
         self.current = 0
         self.measured_current = 0
         self.quenched = True  # Causes LeWiS to enter Quenched state
+        # For the SCPI protocol, we set the magnet supply status to indicate a quench
+        self.magnet_supply_status = set_bit_value(self.magnet_supply_status, MagnetSupplyStatus.QUENCH_DETECTED)
 
     def unquench(self):
         self.quenched = False
+        # For the SCPI protocol, we set the magnet supply status to clear a quench status
+        self.magnet_supply_status = clear_bit_value(self.magnet_supply_status, MagnetSupplyStatus.QUENCH_DETECTED)
 
     def get_voltage(self):
         """Gets the voltage of the PSU.
