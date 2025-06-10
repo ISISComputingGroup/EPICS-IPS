@@ -177,7 +177,7 @@ setHeaterStatus { out "SET:DEV:" $magnet_supply ":PSU:SIG:SWHT:%#{OFF=0|ON=1}"; 
 # Set the setpoint (target) current.
 # Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:CSET:0.0004:VALID
 setSetpointCurrent { out "SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%#.4f"; wait 100;
-                     in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%f:%*s"}
+                     in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%*f:%*s"}
 
 # Set the setpoint (target) field.
 # Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:FSET:0.00:VALID
@@ -188,10 +188,10 @@ setSetpointField { out "SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%#.5f"; wait 100
 # Rate at which current will be ramped or swept to target, either the setpoint or zero.
 # Returns status like: STAT:DEV:GRPZ:PSU:SIG:RCST:5.5:VALID
 setCurrentSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%#.3f"; wait 100;
-                      in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%f%*s"}
+                      in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%*f%*s"}
 
 # Set field sweep rate.
 # Rate at which field will be ramped or swept to target, either the setpoint or zero.
 # Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:RFST:0.3850:VALID
 setFieldSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%#.4f"; wait 100;
-                    in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%f%*s"}
+                    in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%*f%*s"}
