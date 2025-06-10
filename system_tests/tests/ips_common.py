@@ -196,10 +196,8 @@ class IpsBaseTests(object, metaclass=ABCMeta):
 
     @parameterized.expand(val for val in parameterized_list(TEST_SWEEP_RATES))
     def test_WHEN_sweep_rate_set_THEN_sweep_rate_on_ioc_updates(self, _, val):
-        print(f"test_WHEN_sweep_rate_set_THEN_sweep_rate_on_ioc_updates: Setting sweep rate to {val}")
         self.ca.set_pv_value("FIELD:RATE:SP", val)
         self.ca.assert_that_pv_is_number("FIELD:RATE:SP", val, tolerance=TOLERANCE)
-        print(f"test_WHEN_sweep_rate_set_THEN_sweep_rate_on_ioc_updates: FIELD:RATE:SP readback OK")
         self.ca.assert_that_pv_is_number("FIELD:RATE", val, tolerance=TOLERANCE)
         self.ca.assert_that_pv_alarm_is("FIELD:RATE", self.ca.Alarms.NONE)
 
