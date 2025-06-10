@@ -190,10 +190,6 @@ class IpsStreamInterface(StreamInterface):
 
     def get_field_sweep_rate(self):
         field = amps_to_tesla(self.device.current_ramp_rate)
-        self.log.info(f"stream_interface_scpi: get_field_sweep_rate()" 
-                      f" field = {field:.4f}"
-                      f" device.current_ramp_rate = {self.device.current_ramp_rate:.4f}"
-                      )
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{field:.4f}T/m"
 
     def get_software_voltage_limit(self):
@@ -260,10 +256,6 @@ class IpsStreamInterface(StreamInterface):
 
     def set_field_sweep_rate(self, tesla_per_min):
         self.device.current_ramp_rate = tesla_to_amps(tesla_per_min)
-        self.log.info(f"stream_interface_scpi: set_field_sweep_rate()" 
-                      f" tesla = {tesla_per_min:.4f}"
-                      f" device.current_ramp_rate = {self.device.current_ramp_rate:.4f}"
-                      )
         ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:RFST:{float(tesla_per_min):1.4f}:VALID"
         return ret
 
