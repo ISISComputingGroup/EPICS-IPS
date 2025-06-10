@@ -17,7 +17,7 @@ IOCS = [
         "directory": get_default_ioc_dir("IPS"),
         "emulator": EMULATOR_NAME,
         "lewis_protocol": "ips_scpi",
-        "ioc_launcher_class": ProcServLauncher,
+        # "ioc_launcher_class": ProcServLauncher,
         "macros": {
             "STREAMPROTOCOL": "SCPI",
             "MANAGER_ASG": "DEFAULT",
