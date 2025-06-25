@@ -132,6 +132,18 @@ getActivity { out "READ:DEV:" $magnet_supply ":PSU:ACTN"; wait 100;
 getHeaterStatus { out "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT"; wait 100;
                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:SWHT:%{OFF|ON}"; wait 100;}
 
+# *** Need to know what is returned on no alarms present, as it is not documented. ***
+getSysAlarms { out "READ:SYS:ALRM"; wait 100;}
+
+# The following two reads are used to read the system alarms, hopefully in any format or order,
+# as long as the essential patterns match somewhere in the input string.
+readSysAlarmsTemperatureBoard {
+    extrainput = ignore;
+    in "%*/MB1.T1\t/%#{Open Circuit=1|Short Circuit=2|Calibration Error=3|Firmware Error=4|Board Not Configured=5};";}
+readSysAlarmsLevelMeterBoard {
+    extrainput = ignore;
+    in "%*/DB1.L1\t/%#{Open Circuit=1|Short Circuit=2|ADC Error=3|Over Demand=4|Over Temperature=5|Firmware Error=6|Board Not Configured=7|No Reserve=8};";}
+
 # --------------- The following work around limitation of getting legacy status from SCPI protocol -------------
 # Get PSU Status status DWORD
 getMagnetSupplyStatus { out "READ:DEV:" $magnet_supply ":PSU:STAT"; wait 100;
