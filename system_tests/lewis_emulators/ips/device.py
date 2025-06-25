@@ -3,7 +3,7 @@ from collections import OrderedDict
 from lewis.core.logging import has_log
 from lewis.devices import StateMachineDevice
 
-from .modes import Activity, Control, Mode, SweepMode, MagnetSupplyStatus
+from .modes import Activity, Control, Mode, SweepMode, MagnetSupplyStatus, TemperatureBoardStatus, LevelMeterBoardStatus
 
 from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState
 
@@ -113,6 +113,9 @@ class SimulatedIps(StateMachineDevice):
         self.magnet_supply_status = MagnetSupplyStatus.OK
 
         self.voltage_limit: float = 10.0
+        
+        self.tempboard_status: TemperatureBoardStatus = TemperatureBoardStatus.OPEN_CIRCUIT
+        self.levelboard_status: LevelMeterBoardStatus = LevelMeterBoardStatus.OK
 
 
     def _get_state_handlers(self):
@@ -170,3 +173,26 @@ class SimulatedIps(StateMachineDevice):
                 "Can't set the heater to on while the magnet current and PSU current are mismatched"
             )
         self.heater_on = new_status
+
+    def set_tempboard_status(self, status_value: int) -> None:
+        """Sets the temperature board status."""
+        self.log.info(f"set_tempboard_status {status_value}")
+        if status_value in iter(TemperatureBoardStatus):
+            self.log.info(f"set_tempboard_status: status_value is in TemperatureBoardStatus")
+            status: TemperatureBoardStatus = TemperatureBoardStatus(status_value)
+            self.tempboard_status = status
+        else:
+            raise ValueError(
+                f"Invalid temperature board status value: {status_value}. Must be one of {list(TemperatureBoardStatus)}")
+
+    def set_levelboard_status(self, status_value: int) -> None:
+        """Sets the temperature board status."""
+        self.log.info(f"set_levelboard_status {status_value}")
+        if status_value in iter(LevelMeterBoardStatus):
+            self.log.info(f"set_levelboard_status: status_value is in LevelMeterBoardStatus")
+            status: LevelMeterBoardStatus = LevelMeterBoardStatus(status_value)
+            self.levelboard_status = status
+        else:
+            raise ValueError(
+                f"Invalid level board status value: {status_value}. Must be one of {list(LevelMeterBoardStatus)}")
+
