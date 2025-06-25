@@ -68,6 +68,7 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("get_magnet_inductance").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:IND").eos().build(),
         CmdBuilder("get_heater_status").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT").eos().build(),
         CmdBuilder("get_bipolar_mode").escape(f"READ:DEV:{DeviceUID.magnet_supply}:PSU:BIPL").eos().build(),
+        CmdBuilder("get_system_alarms").escape(f"READ:SYS:ALRM").eos().build(),
         CmdBuilder("set_activity").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:").string().eos().build(),
         CmdBuilder("set_current").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:CSET:").float().eos().build(),
         CmdBuilder("set_field").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:FSET:").float().eos().build(),
@@ -234,6 +235,21 @@ class IpsStreamInterface(StreamInterface):
 
     def get_bipolar_mode(self):
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:BIPL:{'ON' if self.device.bipolar else 'OFF'}"
+
+    def get_system_alarms(self):
+        """
+        Returns the system alarms in the format:
+        STAT:SYS:ALRM:MB1.T1<tab>Open Circuit;
+        STAT:SYS:ALRM:DB1.L1<tab>Short Circuit;
+        """
+        alarms = ["STAT:SYS:ALRM",]
+        if self.device.tempboard_status.value != 0:
+            alarms.append(f":{DeviceUID.magnet_temperature_sensor}\t{self.device.tempboard_status.text()};")
+        if self.device.levelboard_status.value != 0:
+            alarms.append(f":{DeviceUID.level_meter}\t{self.device.levelboard_status.text()};")
+        alarm_list_str = "".join(alarms)
+        print(f"get_system_alarms(): {alarm_list_str}")
+        return alarm_list_str
 
     def set_current(self, current):
         self.device.current_setpoint = float(current)
