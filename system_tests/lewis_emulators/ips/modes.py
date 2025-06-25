@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from enum import Enum, IntEnum
 
 
@@ -68,3 +69,85 @@ class MagnetSupplyStatus(IntEnum):
     PWM_CUTOFF = 0x00008000
     VOLTAGE_ADC_ERROR = 0x00010000
     CURRENT_ADC_ERROR = 0x00020000
+
+class BoardStatus(IntEnum):
+    """
+    Provides the base functionality for board status enums and provides methods to lookup
+    mbbi strings from given values and vice-versa.
+    Strings can not be stored as member variables in a IntEnum, so an abstract method is defined
+    to return a list of strings that represent the status values. This abstract method must be
+    implemented in any subclass of BoardStatus.
+    """
+    @classmethod
+    @abstractmethod
+    def names(cls)->list[str]:
+        return []
+
+    def text(self)->str:
+        try:
+            ret = self.__class__.names()[self.value]
+        except IndexError:
+            ret = "Unknown"
+        return ret
+
+
+class TemperatureBoardStatus(BoardStatus):
+    """
+    This class represents the status of the temperature board
+    and is only applicable to the IPS SCPI protocol.
+    These alarms are returned in response to the READ:SYS:ALRM commnand returning errors as strings
+    with the following example: STAT:SYS:ALRM:MB1.T1<tab>Open Circuit;
+    
+    | Status        | Description                                | Bit Value | Bit Position |
+    |---------------|--------------------------------------------|-----------|--------------|
+    | Open Circuit  | Heater off - Open circuit on sensor input  | 00000001  | 0            |
+    | Short Circuit | Short circuit on sensor input              | 00000002  | 1            |
+
+"""
+    OK = 0
+    OPEN_CIRCUIT = 1
+    SHORT_CIRCUIT = 2
+    CALIBRATION_ERROR = 3
+    FIRMWARE_ERROR = 4
+    BOARD_NOT_CONFIGURED = 5
+
+    @classmethod
+    def names(cls):
+        return ["", "Open Circuit", "Short Circuit", "Calibration Error",
+                "Firmware Error", "Board Not Configured"]
+
+
+
+class LevelMeterBoardStatus(BoardStatus):
+    """
+    This class represents the status of the level meter board
+    and is only applicable to the IPS SCPI protocol.
+    These alarms are returned in response to the READ:SYS:ALRM commnand returning errors as strings
+    with the following example: STAT:SYS:ALRM:MB1.L1<tab>Open Circuit;
+
+    | Status               | Description                               | Bit Value | Bit Position |
+    |----------------------|-------------------------------------------|-----------|--------------|
+    | Open Circuit         | Heater off - Open circuit on probe input  | 00000001  | 0            |
+    | Short Circuit        | Short circuit on probe input              | 00000002  | 1            |
+    | ADC Error            | On-board diagnostic: recalibrate          | 00000004  | 2            |
+    | Over Demand          | On-board diagnostic: recalibrate          | 00000008  | 3            |
+    | Over Temperature     |                                           | 00000010  | 4            |
+    | Firmware Error       | Error in board firmware: restart iPS      | 00000020  | 5            |
+    | Board Not Configured | Firmware not loaded correctly: update f/w | 00000040  | 6            |
+    | No Reserve           | Autofill valve open but not filling       | 00000080  | 7            |
+
+"""
+    OK = 0
+    OPEN_CIRCUIT = 1
+    SHORT_CIRCUIT = 2
+    ADC_ERROR = 3
+    OVER_DEMAND = 4
+    OVER_TEMPERATURE = 5
+    FIRMWARE_ERROR = 6
+    BOARD_NOT_CONFIGURED = 7
+    NO_RESERVE = 8
+    
+    @classmethod
+    def names(cls):
+        return ["", "Open Circuit", "Short Circuit", "ADC Error", "Over Demand",
+                "Over Temperature", "Firmware Error", "Board Not Configured", "No Reserve"]
