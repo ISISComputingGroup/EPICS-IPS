@@ -119,4 +119,15 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
             self.ca.assert_that_pv_is_number("FIELD:USER", 0, tolerance=TOLERANCE)
             self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", 0, tolerance=TOLERANCE)
 
+    def test_GIVEN_magnet_temperature_sensor_open_circuit_THEN_ioc_states_open_circuit(
+        self):
+        # Simulate an open circuit on the temperature sensor
+        self._lewis.backdoor_run_function_on_device("set_tempboard_status", [1])
+        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:TBOARD", "Open Circuit", timeout=10)
+        
+    def test_GIVEN_level_sensor_short_circuit_THEN_ioc_states_short_circuit(
+        self):
+        # Simulate an short circuit on the level sensor
+        self._lewis.backdoor_run_function_on_device("set_levelboard_status", [2])
+        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:LBOARD", "Short Circuit", timeout=10)
 
