@@ -116,6 +116,10 @@ class SimulatedIps(StateMachineDevice):
         
         self.tempboard_status: TemperatureBoardStatus = TemperatureBoardStatus.OPEN_CIRCUIT
         self.levelboard_status: LevelMeterBoardStatus = LevelMeterBoardStatus.OK
+        self.nitrogen_frequency_at_zero: float = 0.0
+        self.nitrogen_frequency_at_full: float = 0.0
+        self.helium_empty_resistance: float = 25.0
+        self.helium_full_resistance: float = 0.12
 
 
     def _get_state_handlers(self):
@@ -176,9 +180,7 @@ class SimulatedIps(StateMachineDevice):
 
     def set_tempboard_status(self, status_value: int) -> None:
         """Sets the temperature board status."""
-        self.log.info(f"set_tempboard_status {status_value}")
         if status_value in iter(TemperatureBoardStatus):
-            self.log.info(f"set_tempboard_status: status_value is in TemperatureBoardStatus")
             status: TemperatureBoardStatus = TemperatureBoardStatus(status_value)
             self.tempboard_status = status
         else:
@@ -187,9 +189,7 @@ class SimulatedIps(StateMachineDevice):
 
     def set_levelboard_status(self, status_value: int) -> None:
         """Sets the temperature board status."""
-        self.log.info(f"set_levelboard_status {status_value}")
         if status_value in iter(LevelMeterBoardStatus):
-            self.log.info(f"set_levelboard_status: status_value is in LevelMeterBoardStatus")
             status: LevelMeterBoardStatus = LevelMeterBoardStatus(status_value)
             self.levelboard_status = status
         else:

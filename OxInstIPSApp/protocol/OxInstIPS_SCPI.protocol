@@ -194,7 +194,7 @@ setSetpointCurrent { out "SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%#.4f"; wait 1
 # Set the setpoint (target) field.
 # Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:FSET:0.00:VALID
 setSetpointField { out "SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%#.5f"; wait 100;
-                   in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%f%*s"}
+                   in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%*f%*s"}
 
 # Set current sweep rate.
 # Rate at which current will be ramped or swept to target, either the setpoint or zero.
@@ -207,3 +207,25 @@ setCurrentSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%#.3f"; wait 
 # Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:RFST:0.3850:VALID
 setFieldSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%#.4f"; wait 100;
                     in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%*f%*s"}
+
+# -------------------------------------------------------
+#    LEVELS BOARD COMMANDS
+# -------------------------------------------------------
+getLevelNitFreqZero { out "READ:DEV:" $level_meter ":LVL:NIT:FREQ:ZERO"; wait 100;
+                  in  "STAT:DEV:" $level_meter ":LVL:NIT:FREQ:ZERO:%f"; wait 100;}
+setLevelNitFreqZero { out "SET:DEV:" $level_meter ":LVL:NIT:FREQ:ZERO"; wait 100;
+                  in  "STAT:SET:DEV:" $level_meter ":LVL:NIT:FREQ:ZERO:%*f"; wait 100;}
+getLevelNitFreqFull { out "READ:DEV:" $level_meter ":LVL:NIT:FREQ:FULL"; wait 100;
+                  in  "STAT:DEV:" $level_meter ":LVL:NIT:FREQ:FULL:%f"; wait 100;}
+setLevelNitFreqFull { out "SET:DEV:" $level_meter ":LVL:NIT:FREQ:FULL"; wait 100;
+                  in  "STAT:SET:DEV:" $level_meter ":LVL:NIT:FREQ:FULL:%*f"; wait 100;}
+getLevelHeEmptyRes { out "READ:DEV:" $level_meter ":LVL:HEL:RES:ZERO"; wait 100;
+                     in  "STAT:DEV:" $level_meter ":LVL:HEL:RES:ZERO:%f"; wait 100;}
+setLevelHeEmptyRes { out "SET:DEV:" $level_meter ":LVL:HEL:RES:ZERO:%f"; wait 100;
+                     in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:RES:ZERO:%*f%*s"; wait 100;}
+getLevelHeFullRes { out "READ:DEV:" $level_meter ":LVL:HEL:RES:FULL"; wait 100;
+                     in  "STAT:DEV:" $level_meter ":LVL:HEL:RES:FULL:%f"; wait 100;}
+setLevelHeFullRes { out "SET:DEV:" $level_meter ":LVL:HEL:RES:FULL:%f"; wait 100;
+                     in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:RES:FULL:%*f%*s"; wait 100;}
+
+

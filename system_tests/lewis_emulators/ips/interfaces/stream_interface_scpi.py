@@ -76,6 +76,23 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("set_heater_on").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT:ON").eos().build(),
         CmdBuilder("set_heater_off").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT:OFF").eos().build(),
         CmdBuilder("set_bipolar_mode").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:BIPL:").string().eos().build(),
+
+        CmdBuilder("get_nit_freq_zero").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:ZERO").eos().build(),
+        CmdBuilder("set_nit_freq_zero").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:ZERO:").float().eos().build(),
+        CmdBuilder("get_nit_freq_full").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:FULL").eos().build(),
+        CmdBuilder("set_nit_freq_full").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:FULL:").float().eos().build(),
+        CmdBuilder("get_he_empty_resistance").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:ZERO").eos().build(),
+        CmdBuilder("get_he_full_resistance").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:FULL").eos().build(),
+        CmdBuilder("set_he_empty_resistance").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:ZERO:").float().eos().build(),
+        CmdBuilder("set_he_full_resistance").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:FULL:").float().eos().build(),
     }
 
     def handle_error(self, request, error):
@@ -112,7 +129,6 @@ class IpsStreamInterface(StreamInterface):
             if self.device.activity == MODE_MAPPING[testmode]:
                 break
         mode = self.device.activity.name
-        self.log.info("stream_interface_scpi: get_activity() self.device.activity.name = {} self.device.activity.value = {}".format(self.device.activity.name, self.device.activity.value))
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{testmode}"
 
     def set_activity(self, mode: str):
@@ -128,7 +144,6 @@ class IpsStreamInterface(StreamInterface):
         try:
             self.device.activity = MODE_MAPPING[mode]
             ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{mode}:VALID"
-            self.log.info(f"stream_interface_scpi: set_activity() ret = {ret}")
         except KeyError:
             ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{mode}:INVALID"
             raise ValueError("Invalid mode specified")
@@ -248,7 +263,6 @@ class IpsStreamInterface(StreamInterface):
         if self.device.levelboard_status.value != 0:
             alarms.append(f":{DeviceUID.level_meter}\t{self.device.levelboard_status.text()};")
         alarm_list_str = "".join(alarms)
-        print(f"get_system_alarms(): {alarm_list_str}")
         return alarm_list_str
 
     def set_current(self, current):
@@ -277,5 +291,40 @@ class IpsStreamInterface(StreamInterface):
 
     def set_bipolar_mode(self, mode):
         self.device.bipolar = bool(mode)
-        print(f"set_bipolar(): mode = {mode}")
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:BIPL:{'ON' if self.device.bipolar else 'OFF'}"
+
+    def get_nit_freq_zero(self) -> str:
+        ret = f"STAT:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:ZERO:{self.device.nitrogen_frequency_at_zero:.2f}"
+        return ret
+
+    def set_nit_freq_zero(self, freq) -> str:
+        self.device.nitrogen_frequency_at_zero = float(freq)
+        ret = f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:ZERO:{self.device.nitrogen_frequency_at_zero:.2f}:VALID"
+        return ret
+
+    def get_nit_freq_full(self) -> str:
+        ret = f"STAT:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:FULL:{self.device.nitrogen_frequency_at_full:.2f}"
+        return ret
+
+    def set_nit_freq_full(self, freq) -> str:
+        self.device.nitrogen_frequency_at_full = float(freq)
+        ret = f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:FULL:{self.device.nitrogen_frequency_at_full:.2f}:VALID"
+        return ret
+
+    def get_he_empty_resistance(self) -> str:
+        ret = f"STAT:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:ZERO:{self.device.helium_empty_resistance:.2f}"
+        return ret
+
+    def get_he_full_resistance(self) -> str:
+        ret = f"STAT:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:FULL:{self.device.helium_full_resistance:.2f}"
+        return ret
+
+    def set_he_empty_resistance(self, resistance) -> str:
+        self.device.helium_empty_resistance = float(resistance)
+        ret = f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:ZERO:{self.device.helium_empty_resistance:.2f}:VALID"
+        return ret
+
+    def set_he_full_resistance(self, resistance) -> str:
+        self.device.helium_full_resistance = float(resistance)
+        ret = f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:FULL:{self.device.helium_full_resistance:.2f}:VALID"
+        return ret

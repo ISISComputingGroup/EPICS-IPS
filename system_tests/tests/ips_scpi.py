@@ -34,6 +34,7 @@ TEST_MODES = [TestModes.DEVSIM]
 
 TEST_VALUES = -0.12345, 6.54321  # Should be able to handle negative polarities
 TEST_SWEEP_RATES = 0.001, 0.9876  # Rate can't be negative or >1
+TEST_FREQ_FULL_VALUES = 0.0, 0.5, 1.0  # Frequency values for testing
 
 TOLERANCE = 0.0001
 
@@ -124,10 +125,17 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         # Simulate an open circuit on the temperature sensor
         self._lewis.backdoor_run_function_on_device("set_tempboard_status", [1])
         self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:TBOARD", "Open Circuit", timeout=10)
-        
+
     def test_GIVEN_level_sensor_short_circuit_THEN_ioc_states_short_circuit(
         self):
         # Simulate an short circuit on the level sensor
         self._lewis.backdoor_run_function_on_device("set_levelboard_status", [2])
         self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:LBOARD", "Short Circuit", timeout=10)
 
+    @parameterized.expand(val for val in parameterized_list(TEST_FREQ_FULL_VALUES))
+    def test_GIVEN_level_freq_at_zero_THEN_ioc_states_freq(self, _, val) -> None:
+        # Simulate the nitrogen frequency at zero
+        self._lewis.backdoor_set_on_device("nitrogen_frequency_at_zero", val)
+        self.ca.assert_that_pv_is_number("LVL:NIT:FREQ:ZERO", val, tolerance=TOLERANCE, timeout=10)
+
+        
