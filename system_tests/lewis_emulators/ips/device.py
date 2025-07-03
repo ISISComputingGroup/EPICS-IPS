@@ -3,7 +3,8 @@ from collections import OrderedDict
 from lewis.core.logging import has_log
 from lewis.devices import StateMachineDevice
 
-from .modes import Activity, Control, Mode, SweepMode, MagnetSupplyStatus, TemperatureBoardStatus, LevelMeterBoardStatus
+from .modes import (Activity, Control, Mode, SweepMode, MagnetSupplyStatus,
+                    TemperatureBoardStatus, LevelMeterBoardStatus, LevelMeterHeliumReadRate)
 
 from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState
 
@@ -116,10 +117,20 @@ class SimulatedIps(StateMachineDevice):
         
         self.tempboard_status: TemperatureBoardStatus = TemperatureBoardStatus.OPEN_CIRCUIT
         self.levelboard_status: LevelMeterBoardStatus = LevelMeterBoardStatus.OK
-        self.nitrogen_frequency_at_zero: float = 0.0
-        self.nitrogen_frequency_at_full: float = 0.0
+
         self.helium_empty_resistance: float = 25.0
         self.helium_full_resistance: float = 0.12
+        self.helium_fill_start_level: int = 10
+        self.helium_fill_stop_level: int = 95
+        self.helium_level: int = 50
+        self.helium_read_rate: int = LevelMeterHeliumReadRate.FAST.value
+
+        self.nitrogen_read_interval: int = 750 # milliseconds
+        self.nitrogen_frequency_at_zero: float = 1.0
+        self.nitrogen_frequency_at_full: float = 100.0
+        self.nitrogen_fill_start_level: int = 10
+        self.nitrogen_fill_stop_level: int = 95
+        self.nitrogen_level: int = 50
 
 
     def _get_state_handlers(self):
@@ -196,3 +207,7 @@ class SimulatedIps(StateMachineDevice):
             raise ValueError(
                 f"Invalid level board status value: {status_value}. Must be one of {list(LevelMeterBoardStatus)}")
 
+    def get_nitrogen_refilling(self) -> bool:
+        """Returns whether the nitrogen refilling is in progress."""
+        return self.nitrogen_fill_start_level < self.nitrogen_level < self.nitrogen_fill_stop_level
+    
