@@ -151,3 +151,18 @@ class LevelMeterBoardStatus(BoardStatus):
     def names(cls):
         return ["", "Open Circuit", "Short Circuit", "ADC Error", "Over Demand",
                 "Over Temperature", "Firmware Error", "Board Not Configured", "No Reserve"]
+
+class LevelMeterHeliumReadRate(IntEnum):
+    """
+    This class represents the read rate of the helium level meter.
+    It is only applicable to the IPS SCPI protocol.
+    The read rate is used to determine how often the helium level is read, using the 
+    DEV:<UID>:LVL:HEL:PULS:SLOW:[0|1] command.
+    """
+    SLOW = 0
+    FAST = 1
+
+    @classmethod
+    def names(cls):
+        return ["Slow", "Fast"]
+    
