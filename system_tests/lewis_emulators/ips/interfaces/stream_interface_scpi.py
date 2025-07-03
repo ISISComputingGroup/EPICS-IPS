@@ -2,7 +2,7 @@ from lewis.adapters.stream import StreamInterface
 from lewis.core.logging import has_log
 from lewis.utils.command_builder import CmdBuilder
 
-from ..modes import Activity, Control
+from ..modes import Activity, Control, LevelMeterHeliumReadRate
 
 from ..device import amps_to_tesla, tesla_to_amps
 
@@ -77,6 +77,10 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("set_heater_off").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:SIG:SWHT:OFF").eos().build(),
         CmdBuilder("set_bipolar_mode").escape(f"SET:DEV:{DeviceUID.magnet_supply}:PSU:BIPL:").string().eos().build(),
 
+        CmdBuilder("get_nit_read_interval").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:NIT:PPS").eos().build(),
+        CmdBuilder("set_nit_read_interval").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:NIT:PPS:").int().eos().build(),
         CmdBuilder("get_nit_freq_zero").escape(
             f"READ:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:ZERO").eos().build(),
         CmdBuilder("set_nit_freq_zero").escape(
@@ -85,6 +89,21 @@ class IpsStreamInterface(StreamInterface):
             f"READ:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:FULL").eos().build(),
         CmdBuilder("set_nit_freq_full").escape(
             f"SET:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:FULL:").float().eos().build(),
+        CmdBuilder("get_nit_fill_start_level").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:NIT:LOW").eos().build(),
+        CmdBuilder("set_nit_fill_start_level").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:NIT:LOW:").int().eos().build(),
+        CmdBuilder("get_nit_fill_stop_level").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:NIT:HIGH").eos().build(),
+        CmdBuilder("set_nit_fill_stop_level").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:NIT:HIGH:").int().eos().build(),
+        CmdBuilder("get_nit_refilling").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:NIT:RFL").eos().build(),
+        CmdBuilder("get_nitrogen_level").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:SIG:NIT:LEV").eos().build(),
+
+        CmdBuilder("get_helium_level").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:SIG:HEL:LEV").eos().build(),
         CmdBuilder("get_he_empty_resistance").escape(
             f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:ZERO").eos().build(),
         CmdBuilder("get_he_full_resistance").escape(
@@ -93,6 +112,21 @@ class IpsStreamInterface(StreamInterface):
             f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:ZERO:").float().eos().build(),
         CmdBuilder("set_he_full_resistance").escape(
             f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:FULL:").float().eos().build(),
+        CmdBuilder("get_he_fill_start_level").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:LOW").eos().build(),
+        CmdBuilder("set_he_fill_start_level").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:LOW:").int().eos().build(),
+        CmdBuilder("get_he_fill_stop_level").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:HIGH").eos().build(),
+        CmdBuilder("set_he_fill_stop_level").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:HIGH:").int().eos().build(),
+        CmdBuilder("get_he_refilling").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:RFL").eos().build(),
+        CmdBuilder("get_he_read_rate").escape(
+            f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW").eos().build(),
+        CmdBuilder("set_he_read_rate").escape(
+            f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:").int().eos().build(),
+
     }
 
     def handle_error(self, request, error):
@@ -293,6 +327,23 @@ class IpsStreamInterface(StreamInterface):
         self.device.bipolar = bool(mode)
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:BIPL:{'ON' if self.device.bipolar else 'OFF'}"
 
+
+    def get_nit_read_interval(self) -> str:
+        """
+        Gets the nitrogen read interval in milliseconds.
+        :return: A string indicating the nitrogen read interval.
+        """
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:NIT:PPS:{self.device.nitrogen_read_interval:d}"
+    
+    def set_nit_read_interval(self, interval: int) -> str:
+        """
+        Sets the nitrogen read interval in milliseconds.
+        :param interval: The nitrogen read interval to set.
+        :return: A string indicating the success of the operation.
+        """
+        self.device.nitrogen_read_interval = interval
+        return f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:NIT:PPS:{interval:d}:VALID"   
+    
     def get_nit_freq_zero(self) -> str:
         ret = f"STAT:DEV:{DeviceUID.level_meter}:LVL:NIT:FREQ:ZERO:{self.device.nitrogen_frequency_at_zero:.2f}"
         return ret
@@ -328,3 +379,121 @@ class IpsStreamInterface(StreamInterface):
         self.device.helium_full_resistance = float(resistance)
         ret = f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:HEL:RES:FULL:{self.device.helium_full_resistance:.2f}:VALID"
         return ret
+
+    def get_he_fill_start_level(self) -> str:
+        """
+        Gets the helium fill start level.
+        :return: A string indicating the helium fill start level.
+        """
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:HEL:LOW:{self.device.helium_fill_start_level:d}"
+
+    def set_he_fill_start_level(self, level: int) -> str:
+        """
+        Sets the helium fill start level.
+        :param level: The helium fill start level to set.
+        :return: A string indicating the success of the operation.
+        """
+        self.device.helium_fill_start_level = level
+        return f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:HEL:LOW:{level:d}:VALID"
+
+    def get_he_fill_stop_level(self) -> str:
+        """
+        Gets the helium fill stop level.
+        :return: A string indicating the helium fill stop level.
+        """
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:HEL:HIGH:{self.device.helium_fill_stop_level:d}"
+
+    def set_he_fill_stop_level(self, level: int) -> str:
+        """
+        Sets the helium fill stop level.
+        :param level: The helium fill stop level to set.
+        :return: A string indicating the success of the operation.
+        """
+        self.device.helium_fill_stop_level = level
+        return f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:HEL:HIGH:{level:d}:VALID"
+
+    def get_he_refilling(self) -> str:
+        """
+        Gets the helium refilling status.
+        :return: A string indicating whether helium is refilling.
+        """
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:HEL:RFL:{'ON' if self.device.helium_level <= self.device.helium_fill_start_level else 'OFF'}"
+
+    def get_nit_fill_start_level(self) -> str:
+        """
+        Gets the nitrogen fill start level.
+        :return: A string indicating the nitrogen fill start level.
+        """
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:NIT:LOW:{self.device.nitrogen_fill_start_level:d}"
+
+    def set_nit_fill_start_level(self, level: int) -> str:
+        """
+        Sets the nitrogen fill start level.
+        :param level: The nitrogen fill start level to set.
+        :return: A string indicating the success of the operation.
+        """
+        self.device.nitrogen_fill_start_level = level
+        return f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:NIT:LOW:{level:d}:VALID"
+    
+    def get_nit_fill_stop_level(self) -> str:
+        """
+        Gets the nitrogen fill stop level.
+        :return: A string indicating the nitrogen fill stop level.
+        """
+        return (
+                f"STAT:DEV:{DeviceUID.level_meter}:LVL:NIT:HIGH:"
+                f"{self.device.nitrogen_fill_stop_level:d}"
+        )
+
+    def set_nit_fill_stop_level(self, level: int) -> str:
+        """
+        Sets the nitrogen fill stop level.
+        :param level: The nitrogen fill stop level to set.
+        :return: A string indicating the success of the operation.
+        """
+        self.device.nitrogen_fill_stop_level = level
+        return f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:NIT:HIGH:{level:d}:VALID"
+
+    def get_nit_refilling(self) -> str:
+        """
+        Gets the nitrogen refilling status.
+        :return: A string indicating whether nitrogen is refilling.
+        """
+        state: str = 'ON' if (self.device.nitrogen_level 
+                              <= self.device.nitrogen_fill_start_level) else 'OFF'
+        
+        return (
+                f"STAT:DEV:{DeviceUID.level_meter}:LVL:NIT:RFL:{state}")
+
+    def get_nitrogen_level(self) -> str:
+        """
+        Gets the current nitrogen level.
+        :return: A string indicating the nitrogen level.
+        """
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:SIG:NIT:LEV:{self.device.nitrogen_level:d}"
+
+    def get_helium_level(self) -> str:
+        """
+        Gets the current helium level.
+        :return: A string indicating the helium level.
+        """
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:SIG:HEL:LEV:{self.device.helium_level:d}"
+
+    def get_he_read_rate(self) -> str:
+        """
+        Gets the helium read rate.
+        :return: A string indicating the helium read rate.
+        """
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:"\
+               f"{self.device.helium_read_rate:d}"
+    
+    def set_he_read_rate(self, rate: int) -> str:
+        """
+        Sets the helium read rate.
+        :param rate: The helium read rate to set.
+        :return: A string indicating the success of the operation.
+        """
+        self.device.helium_read_rate = rate
+        return f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:"\
+               f"{self.device.helium_read_rate:d}:VALID"
+    
