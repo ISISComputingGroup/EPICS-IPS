@@ -72,8 +72,9 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         heater_wait_time = float((ioc_config[0].get("macros").get("HEATER_WAITTIME")))
 
         self._lewis, self._ioc = get_running_lewis_and_ioc(EMULATOR_NAME, DEVICE_PREFIX)
-        # Some changes happen on the order of HEATER_WAIT_TIME seconds. Use a significantly longer timeout
-        # to capture a few heater wait times plus some time for PVs to update.
+        # Some changes happen on the order of HEATER_WAIT_TIME seconds.
+        # Use a significantly longer timeout to capture a few heater wait times
+        # plus some time for PVs to update.
         self.ca = ChannelAccess(device_prefix=DEVICE_PREFIX, default_timeout=heater_wait_time * 10)
 
         # Wait for some critical pvs to be connected.
