@@ -211,3 +211,4 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         self.ca.set_pv_value("LVL:HE:PULSE:READ:RATE:SP", 0)
         self.ca.assert_that_pv_is("LVL:HE:PULSE:READ:RATE", "Fast")
 
+        

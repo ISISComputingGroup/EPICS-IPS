@@ -112,7 +112,7 @@ class TemperatureBoardStatus(BoardStatus):
     BOARD_NOT_CONFIGURED = 5
 
     @classmethod
-    def names(cls):
+    def names(cls) -> list[str]:
         return ["", "Open Circuit", "Short Circuit", "Calibration Error",
                 "Firmware Error", "Board Not Configured"]
 
@@ -148,7 +148,7 @@ class LevelMeterBoardStatus(BoardStatus):
     NO_RESERVE = 8
     
     @classmethod
-    def names(cls):
+    def names(cls) -> list[str]:
         return ["", "Open Circuit", "Short Circuit", "ADC Error", "Over Demand",
                 "Over Temperature", "Firmware Error", "Board Not Configured", "No Reserve"]
 
@@ -163,6 +163,6 @@ class LevelMeterHeliumReadRate(IntEnum):
     FAST = 1
 
     @classmethod
-    def names(cls):
+    def names(cls) -> list[str]:
         return ["Slow", "Fast"]
     

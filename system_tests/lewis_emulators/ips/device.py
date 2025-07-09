@@ -3,12 +3,20 @@ from collections import OrderedDict
 from lewis.core.logging import has_log
 from lewis.devices import StateMachineDevice
 
-from .modes import (Activity, Control, Mode, SweepMode, MagnetSupplyStatus,
-                    TemperatureBoardStatus, LevelMeterBoardStatus, LevelMeterHeliumReadRate)
-
+from .modes import (
+    Activity,
+    Control,
+    LevelMeterBoardStatus,
+    LevelMeterHeliumReadRate,
+    MagnetSupplyStatus,
+    Mode,
+    SweepMode,
+    TemperatureBoardStatus,
+)
 from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState
 
-# As long as no magnetic saturation effects are present, there is a linear relationship between Teslas and Amps.
+# As long as no magnetic saturation effects are present,
+# there is a linear relationship between Teslas and Amps.
 #
 # This is called the load line. For more detailed (technical) discussion about the load line see:
 # - http://aries.ucsd.edu/LIB/REPORT/SPPS/FINAL/chap4.pdf (section 4.3.3)
@@ -16,18 +24,18 @@ from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState
 LOAD_LINE_GRADIENT = 0.01
 
 
-def amps_to_tesla(amps):
+def amps_to_tesla(amps: float) ->float:
     return amps * LOAD_LINE_GRADIENT
 
 
-def tesla_to_amps(tesla):
+def tesla_to_amps(tesla: float) -> float:
     return tesla / LOAD_LINE_GRADIENT
 
-def set_bit_value(value, bit_value):
+def set_bit_value(value: int, bit_value: int) -> int:
     """Sets a bit at the position implied by the value."""
     return value | bit_value
 
-def clear_bit_value(value, bit_value):
+def clear_bit_value(value: int, bit_value: int) -> int:
     """Clears a bit at the specified position implied by the value."""
     return value & ~bit_value
 
@@ -36,8 +44,8 @@ class SimulatedIps(StateMachineDevice):
     # Currents that correspond to the switch heater being on and off
     HEATER_OFF_CURRENT, HEATER_ON_CURRENT = 0, 10
 
-    # If there is a difference in current of more than this between the magnet and the power supply, and the switch is
-    # resistive, then the magnet will quench.
+    # If there is a difference in current of more than this between the magnet
+    # and the power supply, and the switch is resistive, then the magnet will quench.
     # No idea what this number should be for a physically realistic system so just guess.
     QUENCH_CURRENT_DELTA = 0.1
 
@@ -47,23 +55,25 @@ class SimulatedIps(StateMachineDevice):
     # Fixed rate at which switch heater can ramp up or down
     HEATER_RAMP_RATE = 5
 
-    def _initialize_data(self):
+    def _initialize_data(self) -> None:
         """Initialize all of the device's attributes.
         """
         self.reset()
 
-    def reset(self):
-        # Within the cryostat, there is a wire that is made superconducting because it is in the cryostat. The wire has
-        # a heater which can be used to make the wire go back to a non-superconducting state.
+    def reset(self) -> None:
+        # Within the cryostat, there is a wire that is made superconducting because it is
+        # in the cryostat. The wire has a heater which can be used to make the wire go back
+        # to a non-superconducting state.
+        # When the heater is ON, the wire has a high resistance and the magnet is powered
+        # directly by the power supply.
         #
-        # When the heater is ON, the wire has a high resistance and the magnet is powered directly by the power supply.
-        #
-        # When the heater is OFF, the wire is superconducting, which means that the power supply can be ramped down and
-        # the magnet will stay active (this is "persistent" mode)
+        # When the heater is OFF, the wire is superconducting, which means that the power
+        # supply can be ramped down and the magnet will stay active (this is "persistent" mode)
         self.heater_on: bool = False
         self.heater_current: float = 0.0
 
-        # "Leads" are the non-superconducting wires between the superconducting magnet and the power supply.
+        # "Leads" are the non-superconducting wires between the superconducting magnet and
+        # the power supply.
         # Not sure what a realistic value is for these leads, so I've guessed.
         self.lead_resistance: float = 50.0
 
@@ -71,14 +81,16 @@ class SimulatedIps(StateMachineDevice):
         self.current: float = 0.0
         self.current_setpoint: float = 0.0
 
-        # Current for the magnet. May be different from the power supply current if the magnet is in persistent mode.
+        # Current for the magnet. May be different from the power supply current if the magnet
+        # is in persistent mode.
         self.magnet_current: float = 0.0
 
         # Measured current may be different from what the PSU is attempting to provide
         self.measured_current: float = 0.0
 
         # If the device trips, store the last current which caused a trip in here.
-        # This could be used for diagnostics e.g. finding maximum field which magnet is capable of in a certain config.
+        # This could be used for diagnostics e.g. finding maximum field which magnet is capable
+        # of in a certain config.
         self.trip_current: float = 0.0
 
         # Ramp rate == sweep rate
@@ -90,11 +102,12 @@ class SimulatedIps(StateMachineDevice):
         # Mode of the magnet e.g. HOLD, TO SET POINT, TO ZERO, CLAMP
         self.activity: Activity = Activity.TO_SETPOINT
 
-        # No idea what a sensible value is. Hard-code this here for now - can't be changed on real device.
+        # No idea what a sensible value is.
+        # Hard-code this here for now - can't be changed on real device.
         self.inductance: float = 0.005
 
-        # No idea what sensible values are here. Also not clear what the behaviour is of the controller when these
-        # limits are hit.
+        # No idea what sensible values are here. 
+        # Also not clear what the behaviour is of the controller when these limits are hit.
         self.neg_current_limit, self.pos_current_limit = -(10**6), 10**6
 
         # Local and locked is the zeroth mode of the control command
@@ -133,17 +146,17 @@ class SimulatedIps(StateMachineDevice):
         self.nitrogen_level: int = 50
 
 
-    def _get_state_handlers(self):
+    def _get_state_handlers(self) -> dict:
         return {
             "heater_off": HeaterOffState(),
             "heater_on": HeaterOnState(),
             "quenched": MagnetQuenchedState(),
         }
 
-    def _get_initial_state(self):
+    def _get_initial_state(self) -> str:
         return "heater_off"
 
-    def _get_transition_handlers(self):
+    def _get_transition_handlers(self) -> OrderedDict:
         return OrderedDict(
             [
                 (("heater_off", "heater_on"), lambda: self.heater_on),
@@ -156,33 +169,36 @@ class SimulatedIps(StateMachineDevice):
             ]
         )
 
-    def quench(self, reason):
-        self.log.info("Magnet quenching at current={} because: {}".format(self.current, reason))
+    def quench(self, reason: str) -> None:
+        self.log.info("Magnet quenching at current={} because: {}"
+                      .format(self.current, reason))
         self.trip_current = self.current
         self.magnet_current = 0
         self.current = 0
         self.measured_current = 0
         self.quenched = True  # Causes LeWiS to enter Quenched state
         # For the SCPI protocol, we set the magnet supply status to indicate a quench
-        self.magnet_supply_status = set_bit_value(self.magnet_supply_status, MagnetSupplyStatus.QUENCH_DETECTED)
+        self.magnet_supply_status = set_bit_value(self.magnet_supply_status,
+                                                  MagnetSupplyStatus.QUENCH_DETECTED)
 
-    def unquench(self):
+    def unquench(self) -> None:
         self.quenched = False
         # For the SCPI protocol, we set the magnet supply status to clear a quench status
-        self.magnet_supply_status = clear_bit_value(self.magnet_supply_status, MagnetSupplyStatus.QUENCH_DETECTED)
+        self.magnet_supply_status = clear_bit_value(self.magnet_supply_status,
+                                                    MagnetSupplyStatus.QUENCH_DETECTED)
 
-    def get_voltage(self):
+    def get_voltage(self) -> float:
         """Gets the voltage of the PSU.
 
-        Everything except the leads is superconducting, we use Ohm's law here with the PSU current and the lead
-        resistance.
+        Everything except the leads is superconducting,
+        we use Ohm's law here with the PSU current and the lead resistance.
 
-        In reality would also need to account for inductance effects from the magnet but I don't think that
-        extra complexity is necessary for this emulator.
+        In reality would also need to account for inductance effects from the magnet
+        but I don't think that extra complexity is necessary for this emulator.
         """
         return self.current * self.lead_resistance
 
-    def set_heater_status(self, new_status):
+    def set_heater_status(self, new_status: bool) -> None:
         if new_status and abs(self.current - self.magnet_current) > self.QUENCH_CURRENT_DELTA:
             raise ValueError(
                 "Can't set the heater to on while the magnet current and PSU current are mismatched"
@@ -196,7 +212,9 @@ class SimulatedIps(StateMachineDevice):
             self.tempboard_status = status
         else:
             raise ValueError(
-                f"Invalid temperature board status value: {status_value}. Must be one of {list(TemperatureBoardStatus)}")
+                (f"Invalid temperature board status value: {status_value}."
+                 f" Must be one of {list(TemperatureBoardStatus)}")
+            )
 
     def set_levelboard_status(self, status_value: int) -> None:
         """Sets the temperature board status."""
@@ -205,7 +223,9 @@ class SimulatedIps(StateMachineDevice):
             self.levelboard_status = status
         else:
             raise ValueError(
-                f"Invalid level board status value: {status_value}. Must be one of {list(LevelMeterBoardStatus)}")
+                (f"Invalid level board status value: {status_value}."
+                 f" Must be one of {list(LevelMeterBoardStatus)}")
+            )
 
     def get_nitrogen_refilling(self) -> bool:
         """Returns whether the nitrogen refilling is in progress."""

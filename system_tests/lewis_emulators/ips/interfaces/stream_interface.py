@@ -2,9 +2,8 @@ from lewis.adapters.stream import StreamInterface
 from lewis.core.logging import has_log
 from lewis.utils.command_builder import CmdBuilder
 
-from ..modes import Activity, Control
-
 from ..device import amps_to_tesla, tesla_to_amps
+from ..modes import Activity, Control
 
 MODE_MAPPING = {
     0: Activity.HOLD,
@@ -66,7 +65,7 @@ class IpsStreamInterface(StreamInterface):
     in_terminator = "\r"
     out_terminator = "\r"
 
-    def handle_error(self, request, error):
+    def handle_error(self, request: str, error:str) -> str:
         err_string = "command was: {}, error was: {}: {}\n".format(
             request, error.__class__.__name__, error
         )
@@ -74,18 +73,20 @@ class IpsStreamInterface(StreamInterface):
         self.log.error(err_string)
         return err_string
 
-    def get_version(self):
+    @classmethod
+    def get_version(cls) -> str:
         return "Simulated IPS"
 
-    def set_comms_mode(self):
-        """This sets the terminator that the device wants, not implemented in emulator. Command does not reply.
+    def set_comms_mode(self) -> None:
+        """This sets the terminator that the device wants, not implemented in emulator.
+        Command does not reply.
         """
 
-    def set_control_mode(self, mode):
+    def set_control_mode(self, mode: int) -> str:
         self.device.control = CONTROL_MODE_MAPPING[mode]
         return "C"
 
-    def set_mode(self, mode):
+    def set_mode(self, mode: int) -> str:
         mode = int(mode)
         try:
             self.device.activity = MODE_MAPPING[mode]
@@ -93,23 +94,23 @@ class IpsStreamInterface(StreamInterface):
             raise ValueError("Invalid mode specified")
         return "A"
 
-    def get_status(self):
+    def get_status(self) -> str:
         resp = "X{x1}{x2}A{a}C{c}H{h}M{m1}{m2}P{p1}{p2}"
 
-        def translate_activity():
+        def translate_activity() -> int:
             for k, v in MODE_MAPPING.items():
                 if v == self.device.activity:
                     return k
             else:
                 raise ValueError("Device was in invalid mode, can't construct status")
 
-        def get_heater_status_number():
+        def get_heater_status_number() -> int:
             if self.device.heater_on:
                 return 1
             else:
                 return 0 if self.device.magnet_current == 0 else 2
 
-        def is_sweeping():
+        def is_sweeping() -> bool:
             if self.device.activity == Activity.TO_SETPOINT:
                 return self.device.current != self.device.current_setpoint
             elif self.device.activity == Activity.TO_ZERO:
@@ -131,80 +132,80 @@ class IpsStreamInterface(StreamInterface):
 
         return resp.format(**statuses)
 
-    def get_current_setpoint(self):
+    def get_current_setpoint(self) -> str:
         return "R{}".format(self.device.current_setpoint)
 
-    def get_supply_voltage(self):
+    def get_supply_voltage(self) -> str:
         return "R{}".format(self.device.get_voltage())
 
-    def get_measured_current(self):
+    def get_measured_current(self) -> str:
         return "R{}".format(self.device.measured_current)
 
-    def get_current(self):
+    def get_current(self) -> str:
         return "R{}".format(self.device.current)
 
-    def get_current_sweep_rate(self):
+    def get_current_sweep_rate(self) -> str:
         return "R{}".format(self.device.current_ramp_rate)
 
-    def get_field(self):
+    def get_field(self) -> str:
         return "R{}".format(amps_to_tesla(self.device.current))
 
-    def get_field_setpoint(self):
+    def get_field_setpoint(self) -> str:
         return "R{}".format(amps_to_tesla(self.device.current_setpoint))
 
-    def get_field_sweep_rate(self):
+    def get_field_sweep_rate(self) -> str:
         return "R{}".format(amps_to_tesla(self.device.current_ramp_rate))
 
-    def get_software_voltage_limit(self):
+    def get_software_voltage_limit(self) -> str:
         return "R0"
 
-    def get_persistent_magnet_current(self):
+    def get_persistent_magnet_current(self) -> str:
         return "R{}".format(self.device.magnet_current)
 
-    def get_trip_current(self):
+    def get_trip_current(self) -> str:
         return "R{}".format(self.device.trip_current)
 
-    def get_persistent_magnet_field(self):
+    def get_persistent_magnet_field(self) -> str:
         return "R{}".format(amps_to_tesla(self.device.magnet_current))
 
-    def get_trip_field(self):
+    def get_trip_field(self) -> str:
         return "R{}".format(amps_to_tesla(self.device.trip_current))
 
-    def get_heater_current(self):
+    def get_heater_current(self) -> str:
         return "R{}".format(self.device.heater_current)
 
-    def get_neg_current_limit(self):
+    def get_neg_current_limit(self) -> str:
         return "R{}".format(self.device.neg_current_limit)
 
-    def get_pos_current_limit(self):
+    def get_pos_current_limit(self) -> str:
         return "R{}".format(self.device.pos_current_limit)
 
-    def get_lead_resistance(self):
+    def get_lead_resistance(self) -> str:
         return "R{}".format(self.device.lead_resistance)
 
-    def get_magnet_inductance(self):
+    def get_magnet_inductance(self) -> str:
         return "R{}".format(self.device.inductance)
 
-    def set_current(self, current):
+    def set_current(self, current: float) -> str:
         self.device.current_setpoint = float(current)
         return "I"
 
-    def set_field(self, current):
+    def set_field(self, current: float) -> str:
         self.device.current_setpoint = tesla_to_amps(float(current))
         return "J"
 
-    def set_heater_on(self):
+    def set_heater_on(self) -> str:
         self.device.set_heater_status(True)
         return "H"
 
-    def set_heater_off(self):
+    def set_heater_off(self) -> str:
         self.device.set_heater_status(False)
         return "H"
 
-    def set_field_sweep_rate(self, tesla):
+    def set_field_sweep_rate(self, tesla: float) -> str:
         self.device.current_ramp_rate = tesla_to_amps(float(tesla))
         return "T"
 
-    def set_sweep_mode(self, mode):
+    def set_sweep_mode(self, mode: int) -> str:
         self.device.sweep_mode = int(mode)
         return "M"

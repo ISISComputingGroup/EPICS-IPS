@@ -7,7 +7,7 @@ SECS_PER_MIN = 60
 
 
 class HeaterOnState(State):
-    def in_state(self, dt):
+    def in_state(self, dt: float) -> None:
         device = self._context
 
         device.heater_current = approaches.linear(
@@ -42,7 +42,7 @@ class HeaterOnState(State):
 
 
 class HeaterOffState(State):
-    def in_state(self, dt):
+    def in_state(self, dt: float) -> None:
         device = self._context
 
         device.heater_current = approaches.linear(
