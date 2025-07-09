@@ -1,11 +1,17 @@
 import unittest
-from .ips_common import IpsBaseTests
 
 from parameterized import parameterized
 from utils.channel_access import ChannelAccess
 from utils.ioc_launcher import ProcServLauncher, get_default_ioc_dir
 from utils.test_modes import TestModes
-from utils.testing import get_running_lewis_and_ioc, parameterized_list, unstable_test
+from utils.testing import get_running_lewis_and_ioc, parameterized_list
+
+from .ips_common import IpsBaseTests
+
+# Tell ruff to ignore the N802 warning (function name should be lowercase).
+# Names contain GIVEN, WHEN, THEN
+# Ignore line length as well, as this is a common pattern in tests.
+# ruff: noqa: N802, E501
 
 DEVICE_PREFIX = "IPS_01"
 EMULATOR_NAME = "ips"
@@ -32,8 +38,8 @@ IOCS = [
 # Only run tests in DEVSIM. Unable to produce detailed enough functionality to be useful in recsim.
 TEST_MODES = [TestModes.DEVSIM]
 
-TEST_VALUES = -0.12345, 6.54321  # Should be able to handle negative polarities
-TEST_SWEEP_RATES = 0.001, 0.9876  # Rate can't be negative or >1
+TEST_VALUES = [-0.12345, 6.54321]  # Should be able to handle negative polarities
+TEST_SWEEP_RATES = [0.001, 0.9876]  # Rate can't be negative or >1
 
 TOLERANCE = 0.0001
 
@@ -60,21 +66,22 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
     """
     Tests for the Ips legacy protocol IOC.
     """
-    def _get_device_prefix(self):
+    def _get_device_prefix(self) -> str:
         return DEVICE_PREFIX
 
-    def _get_ioc_config(self):
+    def _get_ioc_config(self) -> list:
         return IOCS
 
-    def setUp(self):
+    def setUp(self) -> None:
         ioc_config = self._get_ioc_config()
 
         # Time to wait for the heater to warm up/cool down (extracted from IOC macros above)
         heater_wait_time = float((ioc_config[0].get("macros").get("HEATER_WAITTIME")))
 
         self._lewis, self._ioc = get_running_lewis_and_ioc(EMULATOR_NAME, DEVICE_PREFIX)
-        # Some changes happen on the order of heater_wait_time seconds. Use a significantly longer timeout
-        # to capture a few heater wait times plus some time for PVs to update.
+        # Some changes happen on the order of heater_wait_time seconds.
+        # Use a significantly longer timeout to capture a few heater wait times
+        # plus some time for PVs to update.
         self.ca = ChannelAccess(device_prefix=DEVICE_PREFIX, default_timeout=heater_wait_time * 10)
 
         # Wait for some critical pvs to be connected.
@@ -85,8 +92,8 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
         self.ca.set_pv_value("CONTROL:SP", "Remote & Unlocked")
         self.ca.set_pv_value("ACTIVITY:SP", "To Setpoint")
 
-        # Don't run reset as the sudden change of state confuses the IOC's state machine. No matter what the initial
-        # state of the device the SNL should be able to deal with it.
+        # Don't run reset as the sudden change of state confuses the IOC's state machine.
+        # No matter what the initial state of the device the SNL should be able to deal with it.
         # self._lewis.backdoor_run_function_on_device("reset")
 
         self.ca.set_pv_value("FIELD:RATE:SP", 10)
@@ -97,7 +104,7 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
         # Wait for statemachine to reach "at field" state before every test.
         self.ca.assert_that_pv_is("STATEMACHINE", "At field")
 
-    def _assert_heater_is(self, heater_state):
+    def _assert_heater_is(self, heater_state: bool) -> None:
         self.ca.assert_that_pv_is("HEATER:STATUS:SP", "On" if heater_state else "Off")
         if heater_state:
             self.ca.assert_that_pv_is(
@@ -109,8 +116,8 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
 
     @parameterized.expand(field for field in parameterized_list(TEST_VALUES))
     def test_GIVEN_magnet_quenches_while_at_field_THEN_ioc_displays_this_quench_in_statuses(
-        self, _, field
-    ):
+        self, _:str, field : float
+    ) -> None:
         self._set_and_check_persistent_mode(False)
         self.ca.set_pv_value("FIELD:SP", field)
         self._assert_field_is(field)
@@ -125,10 +132,13 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
             # The trip field should be the field at the point when the magnet quenched.
             self.ca.assert_that_pv_is_number("FIELD:TRIP", field, tolerance=TOLERANCE)
 
-            # Field should be set to zero by emulator (mirroring what the field ought to do in the real device)
+            # Field should be set to zero by emulator
+            # (mirroring what the field ought to do in the real device)
             self.ca.assert_that_pv_is_number("FIELD", 0, tolerance=TOLERANCE)
             self.ca.assert_that_pv_is_number("FIELD:USER", 0, tolerance=TOLERANCE)
-            self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", 0, tolerance=TOLERANCE)
+            self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", 
+                                             0, 
+                                             tolerance=TOLERANCE)
 
     # These tests for locking and unlocking the remote control are only applicable
     # to the legacy protocol. SCPI does not have a remote control lock.
@@ -136,8 +146,8 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
         control_command for control_command in parameterized_list(CONTROL_COMMANDS_WITH_VALUES)
     )
     def test_WHEN_control_command_value_set_THEN_remote_unlocked_set(
-        self, _, control_pv, set_value
-    ):
+        self, _:str, control_pv: str, set_value: str
+    ) -> None:
         self.ca.set_pv_value("CONTROL", "Local & Locked")
         self.ca.set_pv_value(control_pv, set_value)
         self.ca.assert_that_pv_is("CONTROL", "Remote & Unlocked")
@@ -145,7 +155,9 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
     @parameterized.expand(
         control_pv for control_pv in parameterized_list(CONTROL_COMMANDS_WITHOUT_VALUES)
     )
-    def test_WHEN_control_command_processed_THEN_remote_unlocked_set(self, _, control_pv):
+    def test_WHEN_control_command_processed_THEN_remote_unlocked_set(self, 
+                                                                     _:str, 
+                                                                     control_pv: str) -> None:
         self.ca.set_pv_value("CONTROL", "Local & Locked")
         self.ca.process_pv(control_pv)
         self.ca.assert_that_pv_is("CONTROL", "Remote & Unlocked")

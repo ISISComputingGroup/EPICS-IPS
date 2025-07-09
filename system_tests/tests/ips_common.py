@@ -1,14 +1,15 @@
-import unittest
 
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 
 from parameterized import parameterized
-
-from utils.channel_access import ChannelAccess
-from utils.ioc_launcher import ProcServLauncher, get_default_ioc_dir
 from utils.test_modes import TestModes
-from utils.testing import get_running_lewis_and_ioc, parameterized_list, unstable_test
+from utils.testing import parameterized_list, unstable_test
+
+# Tell ruff to ignore the N802 warning (function name should be lowercase).
+# Names contain GIVEN, WHEN, THEN
+# Ignore line length as well, as this is a common pattern in tests.
+# ruff: noqa: N802, E501
 
 DEVICE_PREFIX = "IPS_01"
 EMULATOR_NAME = "ips"
@@ -17,8 +18,8 @@ EMULATOR_NAME = "ips"
 # Only run tests in DEVSIM. Unable to produce detailed enough functionality to be useful in recsim.
 TEST_MODES = [TestModes.DEVSIM]
 
-TEST_VALUES = -0.12345, 6.54321  # Should be able to handle negative polarities
-TEST_SWEEP_RATES = 0.001, 0.9876  # Rate can't be negative or >1
+TEST_VALUES = [-0.12345, 6.54321]  # Should be able to handle negative polarities
+TEST_SWEEP_RATES = [0.001, 0.9876]  # Rate can't be negative or >1
 
 TOLERANCE = 0.0001
 
@@ -46,43 +47,43 @@ class IpsBaseTests(object, metaclass=ABCMeta):
     Tests for the Ips IOC.
     """
     @abstractmethod
-    def _get_device_prefix(self):
+    def _get_device_prefix(self) -> str:
         pass
 
     @abstractmethod
-    def _get_ioc_config(self):
+    def _get_ioc_config(self) -> list[dict]:
         pass
 
     @abstractmethod
-    def setUp(self):
+    def setUp(self) -> None:
         pass
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         # Wait for statemachine to reach "at field" state after every test.
         self.ca.assert_that_pv_is("STATEMACHINE", "At field")
 
         self.assertEqual(self._lewis.backdoor_get_from_device("quenched"), "False")
 
-    def test_WHEN_ioc_is_started_THEN_ioc_is_not_disabled(self):
+    def test_WHEN_ioc_is_started_THEN_ioc_is_not_disabled(self) -> None:
         self.ca.assert_that_pv_is("DISABLE", "COMMS ENABLED")
 
-    def _assert_field_is(self, field, check_stable=False):
+    def _assert_field_is(self, field: float, check_stable:bool=False) -> None:
         self.ca.assert_that_pv_is_number("FIELD:USER", field, tolerance=TOLERANCE)
         if check_stable:
             self.ca.assert_that_pv_value_is_unchanged("FIELD:USER", wait=30)
             self.ca.assert_that_pv_is_number("FIELD:USER", field, tolerance=TOLERANCE, timeout=10)
 
     @abstractmethod
-    def _assert_heater_is(self, heater_state):
+    def _assert_heater_is(self, heater_state: bool) -> None:
         pass
     
-    def _set_and_check_persistent_mode(self, mode):
+    def _set_and_check_persistent_mode(self, mode: bool) -> None:
         self.ca.assert_setting_setpoint_sets_readback("YES" if mode else "NO", "PERSISTENT")
 
     @parameterized.expand(val for val in parameterized_list(TEST_VALUES))
     def test_GIVEN_persistent_mode_enabled_WHEN_magnet_told_to_go_to_field_setpoint_THEN_goes_to_that_setpoint_and_psu_ramps_to_zero(
-        self, _, val
-    ):
+        self, _:str, val: float
+    ) -> None:
         initial_field = 1
 
         self._set_and_check_persistent_mode(True)
@@ -103,15 +104,15 @@ class IpsBaseTests(object, metaclass=ABCMeta):
         # Then it is safe to turn on the heater
         self._assert_heater_is(True)
 
-        # Assert that value gets passed to device by SNL. SNL waits 30s for the heater to cool down/warm up
-        # after being set.
+        # Assert that value gets passed to device by SNL.
+        # SNL waits 30s for the heater to cool down/warm up after being set.
         self._assert_field_is(val)
 
         # Now that the correct current is in the magnet, the SNL should turn the heater off
         self._assert_heater_is(False)
 
-        # Now that the heater is off, can ramp down the PSU to zero (SNL waits some time for heater to be off before
-        # ramping PSU to zero)
+        # Now that the heater is off, can ramp down the PSU to zero
+        # (SNL waits some time for heater to be off before ramping PSU to zero)
         self.ca.assert_that_pv_is_number("FIELD", 0, tolerance=TOLERANCE)  # PSU field
         self.ca.assert_that_pv_is_number(
             "MAGNET:FIELD:PERSISTENT", val, tolerance=TOLERANCE
@@ -125,8 +126,8 @@ class IpsBaseTests(object, metaclass=ABCMeta):
         self.ca.assert_that_pv_is("STATEMACHINE", "At field")
         self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", val, tolerance=TOLERANCE)
 
-        # "User" field should take the value put in the setpoint, even when the actual field provided by the supply
-        # drops to zero
+        # "User" field should take the value put in the setpoint,
+        # even when the actual field provided by the supply drops to zero
         self.ca.assert_that_pv_is_number("FIELD", 0, tolerance=TOLERANCE)  # PSU field
         self.ca.assert_that_pv_is_number(
             "MAGNET:FIELD:PERSISTENT", val, tolerance=TOLERANCE
@@ -137,8 +138,8 @@ class IpsBaseTests(object, metaclass=ABCMeta):
 
     @parameterized.expand(val for val in parameterized_list(TEST_VALUES))
     def test_GIVEN_non_persistent_mode_WHEN_magnet_told_to_go_to_field_setpoint_THEN_goes_to_that_setpoint_and_psu_does_not_ramp_to_zero(
-        self, _, val
-    ):
+        self, _: str, val: float
+    ) -> None:
         initial_field = 1
 
         self._set_and_check_persistent_mode(True)
@@ -157,12 +158,13 @@ class IpsBaseTests(object, metaclass=ABCMeta):
         # PSU should be ramped to match the persistent field inside the magnet (if there was one)
         self.ca.assert_that_pv_is("FIELD", initial_field, timeout=10)
 
-        # Then it is safe to turn on the heater (the heater is explicitly switched on and we wait for it even if it
+        # Then it is safe to turn on the heater
+        # (the heater is explicitly switched on and we wait for it even if it
         # was already on out of an abundance of caution).
         self._assert_heater_is(True)
 
-        # Assert that value gets passed to device by SNL. SNL waits 30s for the heater to cool down/warm up
-        # after being set.
+        # Assert that value gets passed to device by SNL.
+        # SNL waits 30s for the heater to cool down/warm up after being set.
         self._assert_field_is(val)
 
         # ...And the magnet should now be in the right state!
@@ -173,7 +175,7 @@ class IpsBaseTests(object, metaclass=ABCMeta):
         self._assert_field_is(val, check_stable=True)
 
     @contextmanager
-    def _backdoor_magnet_quench(self, reason="Test framework quench"):
+    def _backdoor_magnet_quench(self, reason: str="Test framework quench") -> None:
         self._lewis.backdoor_run_function_on_device("quench", [reason])
         try:
             yield
@@ -185,17 +187,19 @@ class IpsBaseTests(object, metaclass=ABCMeta):
             self.ca.assert_that_pv_alarm_is("STS:SYSTEM:FAULT", self.ca.Alarms.NONE)
 
     @parameterized.expand(val for val in parameterized_list(TEST_VALUES))
-    def test_WHEN_inductance_set_via_backdoor_THEN_value_in_ioc_updates(self, _, val):
+    def test_WHEN_inductance_set_via_backdoor_THEN_value_in_ioc_updates\
+                    (self, _: str, val: float) -> None:
         self._lewis.backdoor_set_on_device("inductance", val)
         self.ca.assert_that_pv_is_number("MAGNET:INDUCTANCE", val, tolerance=TOLERANCE)
 
     @parameterized.expand(val for val in parameterized_list(TEST_VALUES))
-    def test_WHEN_measured_current_set_via_backdoor_THEN_value_in_ioc_updates(self, _, val):
+    def test_WHEN_measured_current_set_via_backdoor_THEN_value_in_ioc_updates\
+                    (self, _: str, val:float) -> None:
         self._lewis.backdoor_set_on_device("measured_current", val)
         self.ca.assert_that_pv_is_number("MAGNET:CURR:MEAS", val, tolerance=TOLERANCE)
 
     @parameterized.expand(val for val in parameterized_list(TEST_SWEEP_RATES))
-    def test_WHEN_sweep_rate_set_THEN_sweep_rate_on_ioc_updates(self, _, val):
+    def test_WHEN_sweep_rate_set_THEN_sweep_rate_on_ioc_updates(self, _: str, val: float) -> None:
         self.ca.set_pv_value("FIELD:RATE:SP", val)
         self.ca.assert_that_pv_is_number("FIELD:RATE:SP", val, tolerance=TOLERANCE)
         self.ca.assert_that_pv_is_number("FIELD:RATE", val, tolerance=TOLERANCE)
@@ -204,8 +208,8 @@ class IpsBaseTests(object, metaclass=ABCMeta):
     @parameterized.expand(activity_state for activity_state in parameterized_list(ACTIVITY_STATES))
     @unstable_test()
     def test_WHEN_activity_set_via_backdoor_to_clamped_THEN_alarm_major_ELSE_no_alarm(
-        self, _, activity_state
-    ):
+        self, _: str, activity_state: str
+    ) -> None:
         if activity_state == "Clamped":
             self.ca.set_pv_value("ACTIVITY:SP", "Clamp")
         else:
@@ -219,7 +223,7 @@ class IpsBaseTests(object, metaclass=ABCMeta):
 
     # original problem/complaint:
     # in non-persistent mode, heater wait time always implemented, therefore too slow to set new fields
-    def test_GIVEN_at_field_in_non_persistent_mode_WHEN_new_field_set_THEN_no_wait_for_heater(self):
+    def test_GIVEN_at_field_in_non_persistent_mode_WHEN_new_field_set_THEN_no_wait_for_heater(self) -> None:
         # arrange: set mode to non-persistent, set field
         self._set_and_check_persistent_mode(False)
         self.ca.set_pv_value("FIELD:SP", 3.21)
