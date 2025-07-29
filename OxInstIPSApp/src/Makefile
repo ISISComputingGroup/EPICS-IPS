@@ -2,11 +2,7 @@ TOP=../..
 
 include $(TOP)/configure/CONFIG
 
-# -------------------------------
-# Build an Diamond Support Module
-# -------------------------------
-
-PROD_IOC += OxInstIPS
+LIBRARY_IOC += OxInstIPS
 
 # xxxRecord.h will be created from xxxRecord.dbd
 #DBDINC += xxx.h
@@ -26,10 +22,12 @@ OxInstIPS_DBD += base.dbd
 OxInstIPS_DBD += calcSupport.dbd
 OxInstIPS_DBD += asyn.dbd
 OxInstIPS_DBD += stream.dbd
+OxInstIPS_DBD += asubFunctions.dbd
 
 # OxInstIPS_registerRecordDeviceDriver.cpp will be created
 # OxInstIPS.dbd
 OxInstIPS_SRCS += OxInstIPS_registerRecordDeviceDriver.cpp
+OxInstIPS_SRCS += alarms.c
 
 # These two lines are needed for non-vxWorks builds, such as Linux
 OxInstIPS_SRCS_DEFAULT += OxInstIPSMain.cpp
@@ -43,7 +41,7 @@ OxInstIPS_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
 # This line says that this IOC Application depends on the
 # xxx Support Module
-OxInstIPS_LIBS += stream asyn calc sscan pcre
+OxInstIPS_LIBS += stream calc sscan pcre utilities asubFunctions
 
 # We need to link this IOC Application against the EPICS Base libraries
 OxInstIPS_LIBS += $(EPICS_BASE_IOC_LIBS)

@@ -133,16 +133,27 @@ getHeaterStatus { out "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT";
                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:SWHT:%{OFF|ON}";}
 
 # *** Need to know what is returned on no alarms present, as it is not documented. ***
-getSysAlarms { out "READ:SYS:ALRM";}
+getSysAlarms { out "READ:SYS:ALRM";
+               in "STAT:SYS:ALRM:%s";}
 
 # The following two reads are used to read the system alarms, hopefully in any format or order,
 # as long as the essential patterns match somewhere in the input string.
+# On testing with a real device, the input string is of the form:
+# STAT:SYS:ALRM:DB8.T1<9>Open Circuit;MB1.T1<9>Open Circuit;
+# If no errors are present, the input string is empty:
+# STAT:SYS:ALRM:
 readSysAlarmsTemperatureBoard {
-    extrainput = ignore;
-    in "%*/MB1.T1\t/%#{Open Circuit=1|Short Circuit=2|Calibration Error=3|Firmware Error=4|Board Not Configured=5};";}
+    in "STAT:SYS:ALRM:%*/MB1.T1\t/%#{Open Circuit=1|Short Circuit=2|Calibration Error=3|Firmware Error=4|Board Not Configured=5};";}
+readSysAlarms10TBoard {
+    in "STAT:SYS:ALRM:%*/DB8.T1\t/%#{Open Circuit=1|Short Circuit=2|Calibration Error=3|Firmware Error=4|Board Not Configured=5};";}
 readSysAlarmsLevelMeterBoard {
-    extrainput = ignore;
-    in "%*/DB1.L1\t/%#{Open Circuit=1|Short Circuit=2|ADC Error=3|Over Demand=4|Over Temperature=5|Firmware Error=6|Board Not Configured=7|No Reserve=8};";}
+    in "STAT:SYS:ALRM:%*/DB1.L1\t/%#{Open Circuit=1|Short Circuit=2|ADC Error=3|Over Demand=4|Over Temperature=5|Firmware Error=6|Board Not Configured=7|No Reserve=8};";}
+
+# Cater for when no alarms are present, where we just receive STAT:SYS:ALRM:
+# The intention is that in the empty scenario, all alarm records will be reset to No Alarm, as they
+# can't determine on their own that there are no alarms present.
+readSysAlarmsEmpty { in "STAT:SYS:ALRM:%s"; }
+
 
 # --------------- The following work around limitation of getting legacy status from SCPI protocol -------------
 # Get PSU Status status DWORD
@@ -257,15 +268,19 @@ getLevelHeFillStopThreshold { out "READ:DEV:" $level_meter ":LVL:HEL:HIGH";
 
 setLevelHeFillStopThreshold { out "SET:DEV:" $level_meter ":LVL:HEL:HIGH:%d";
                                in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:HIGH:%*d%*s";
-                               @init {getLevelHeFillStopThreshold;}};
+                               @init {getLevelHeFillStopThreshold;}}
 
-getLevelHeRefilling { out "READ:DEV:" $level_meter ":LVL:HEL:RFL";
-                       in  "STAT:DEV:" $level_meter ":LVL:HEL:RFL:%#{ON=1|OFF=0}";}
+# The documentation is wrong!:
+# READ:DEV:DB1.L1:LVL:HEL:RFL actually returns which relay output is used to turn the
+# autofill on or off (or indeed can be used to set which relay is used), not the current status.
+# If this is implemented in future, it will need to be modified.
+#getLevelHeRefilling { out "READ:DEV:" $level_meter ":LVL:HEL:RFL";
+#                       in  "STAT:DEV:" $level_meter ":LVL:HEL:RFL:%{OFF|ON}";}
 
 getLevelHeReadingRate { out "READ:DEV:" $level_meter ":LVL:HEL:PULS:SLOW";
-                            in  "STAT:DEV:" $level_meter ":LVL:HEL:PULS:SLOW:%d";}
+                            in  "STAT:DEV:" $level_meter ":LVL:HEL:PULS:SLOW:%{OFF|ON}";}
 
-setLevelHeReadingRate { out "SET:DEV:" $level_meter ":LVL:HEL:PULS:SLOW:%d";
+setLevelHeReadingRate { out "SET:DEV:" $level_meter ":LVL:HEL:PULS:SLOW:%{OFF|ON}";
                             in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:PULS:SLOW:%*s";
                             @init {getLevelHeReadingRate;}}
 
@@ -293,8 +308,12 @@ setLevelNitFillStopThreshold { out "SET:DEV:" $level_meter ":LVL:NIT:HIGH:%d";
                                in  "STAT:SET:DEV:" $level_meter ":LVL:NIT:HIGH:%*d%*s";
                                @init {getLevelNitFillStopThreshold;}};
 
-getLevelNitRefilling { out "READ:DEV:" $level_meter ":LVL:NIT:RFL";
-                       in  "STAT:DEV:" $level_meter ":LVL:NIT:RFL:%#{ON=1|OFF=0}";}
+# The documentation is wrong!:
+# READ:DEV:DB1.L1:LVL:NIT:RFL actually returns which relay output is used to turn the
+# autofill on or off (or indeed can be used to set which relay is used), not the current status.
+# If this is implemented in future, it will need to be modified.
+#getLevelNitRefilling { out "READ:DEV:" $level_meter ":LVL:NIT:RFL";
+#                       in  "STAT:DEV:" $level_meter ":LVL:NIT:RFL:%{OFF|ON}";}
 
 getLevelNitrogenLevel { out "READ:DEV:" $level_meter ":LVL:SIG:NIT:LEV";
                         in  "STAT:DEV:" $level_meter ":LVL:SIG:NIT:LEV:%d";}
@@ -302,6 +321,21 @@ getLevelNitrogenLevel { out "READ:DEV:" $level_meter ":LVL:SIG:NIT:LEV";
 getLevelHeliumLevel { out "READ:DEV:" $level_meter ":LVL:SIG:HEL:LEV";
                       in  "STAT:DEV:" $level_meter ":LVL:SIG:HEL:LEV:%d";}
 
+# -------------------------------------------------------
+#    TEMPERATURE BOARD COMMANDS
+# -------------------------------------------------------
+getMagnetTemperature { out "READ:DEV:" $magnet_temperature_sensor ":TEMP:SIG:TEMP";
+                     in  "STAT:DEV:" $magnet_temperature_sensor ":TEMP:SIG:TEMP:%f%*s";}
+
+getLambdaPlateTemperature { out "READ:DEV:" $temperature_sensor_10T ":TEMP:SIG:TEMP";
+                     in  "STAT:DEV:" $temperature_sensor_10T ":TEMP:SIG:TEMP:%f%*s";}
+
+
+# -------------------------------------------------------
+#    PRESSURE BOARD COMMANDS
+# -------------------------------------------------------
+getPressure { out "READ:DEV:" $pressure_sensor_10T ":PRES:SIG:PRES";
+              in  "STAT:DEV:" $pressure_sensor_10T ":PRES:SIG:PRES:%f%*s";}
 
 
 
