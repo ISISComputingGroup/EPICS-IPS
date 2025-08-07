@@ -113,8 +113,8 @@ class TemperatureBoardStatus(BoardStatus):
 
     @classmethod
     def names(cls) -> list[str]:
-        return ["", "Open Circuit", "Short Circuit", "Calibration Error",
-                "Firmware Error", "Board Not Configured"]
+        return ["", "Open circuit", "Short circuit", "Calibration error",
+                "Firmware error", "Board not configured"]
 
 
 
@@ -149,8 +149,8 @@ class LevelMeterBoardStatus(BoardStatus):
     
     @classmethod
     def names(cls) -> list[str]:
-        return ["", "Open Circuit", "Short Circuit", "ADC Error", "Over Demand",
-                "Over Temperature", "Firmware Error", "Board Not Configured", "No Reserve"]
+        return ["", "Open circuit", "Short circuit", "ADC error", "Over demand",
+                "Over temperature", "Firmware error", "board not configured", "No reserve"]
 
 class LevelMeterHeliumReadRate(IntEnum):
     """
@@ -165,4 +165,58 @@ class LevelMeterHeliumReadRate(IntEnum):
     @classmethod
     def names(cls) -> list[str]:
         return ["Slow", "Fast"]
-    
+
+
+class PressureBoardStatus(BoardStatus):
+    """
+    This class represents the status of the pressure board
+    and is only applicable to the IPS SCPI protocol.
+    These alarms are returned in response to the READ:SYS:ALRM commnand returning errors as strings
+    with the following example: STAT:SYS:ALRM:MB1.L1<tab>Open Circuit;
+
+    | Status               | Description                               | Bit Value | Bit Position |
+    |----------------------|-------------------------------------------|-----------|--------------|
+    | Open Circuit         | Heater off - Open circuit on probe input  | 00000001  | 0            |
+    | Short Circuit        | Short circuit on probe input              | 00000002  | 1            |
+    | ADC Error            | On-board diagnostic: recalibrate          | 00000004  | 2            |
+    | Over Demand          | On-board diagnostic: recalibrate          | 00000008  | 3            |
+    | Over Temperature     |                                           | 00000010  | 4            |
+    | Firmware Error       | Error in board firmware: restart iPS      | 00000020  | 5            |
+    | Board Not Configured | Firmware not loaded correctly: update f/w | 00000040  | 6            |
+    | No Reserve           | Autofill valve open but not filling       | 00000080  | 7            |
+
+"""
+    OK = 0
+    OPEN_CIRCUIT = 1
+    SHORT_CIRCUIT = 2
+    CALIB_ERROR = 3
+    FWERROR = 4
+    NOTCONFIGD = 5
+    OVER_CURRENT = 6
+    CURRENT_LEAK = 7
+    PWRONFAIL = 8
+    CHKSUMERR = 9
+    CLKFAIL = 10
+    ADC_ERROR = 11
+    MAINS_FAIL = 12
+    REFERENCE_FAIL = 13
+    PLUS12VFAIL = 14
+    MINUS12VFAIL = 15
+    PLUS8VFAIL = 16
+    MINUS8VFAIL = 17
+    AMPGAIN_ERR = 18
+    AMPOFFSET_ERR = 19
+    ADCPGA_ERR = 20
+    ADCXTAL_ERR = 21
+    PLUSEXCITE_ERR = 22
+    MINUSXCITE_ERR = 23
+
+    @classmethod
+    def names(cls) -> list[str]:
+        return ["", "Open circuit", "Short circuit", "Calibration error", "Firmware error",
+                "Board not configured", "Over current", "Current leakage", "Power on fail",
+                "Checksum fail", "Clock fail", "ADC fail", "Mains fail",
+                "Reference fail", "12V fail", "-12V fail", "8V fail", "-8V fail",
+                "Ampl gain error", "Amp offset error", "ADC PGA error", "ADC XTAL error",
+                "Excitation + error", "Excitation - error"]
+
