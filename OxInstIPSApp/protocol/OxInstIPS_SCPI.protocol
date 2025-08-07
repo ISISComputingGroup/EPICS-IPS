@@ -133,26 +133,11 @@ getHeaterStatus { out "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT";
                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:SWHT:%{OFF|ON}";}
 
 # *** Need to know what is returned on no alarms present, as it is not documented. ***
+# *** Found empirically that it returns an empty string (afterSTAT:SYS:ALRM:)
+#     when no alarms are present. ***
+# Note: For the input we must use %#s (not just %s) as there may be a tab character delimiter
 getSysAlarms { out "READ:SYS:ALRM";
-               in "STAT:SYS:ALRM:%s";}
-
-# The following two reads are used to read the system alarms, hopefully in any format or order,
-# as long as the essential patterns match somewhere in the input string.
-# On testing with a real device, the input string is of the form:
-# STAT:SYS:ALRM:DB8.T1<9>Open Circuit;MB1.T1<9>Open Circuit;
-# If no errors are present, the input string is empty:
-# STAT:SYS:ALRM:
-readSysAlarmsTemperatureBoard {
-    in "STAT:SYS:ALRM:%*/MB1.T1\t/%#{Open Circuit=1|Short Circuit=2|Calibration Error=3|Firmware Error=4|Board Not Configured=5};";}
-readSysAlarms10TBoard {
-    in "STAT:SYS:ALRM:%*/DB8.T1\t/%#{Open Circuit=1|Short Circuit=2|Calibration Error=3|Firmware Error=4|Board Not Configured=5};";}
-readSysAlarmsLevelMeterBoard {
-    in "STAT:SYS:ALRM:%*/DB1.L1\t/%#{Open Circuit=1|Short Circuit=2|ADC Error=3|Over Demand=4|Over Temperature=5|Firmware Error=6|Board Not Configured=7|No Reserve=8};";}
-
-# Cater for when no alarms are present, where we just receive STAT:SYS:ALRM:
-# The intention is that in the empty scenario, all alarm records will be reset to No Alarm, as they
-# can't determine on their own that there are no alarms present.
-readSysAlarmsEmpty { in "STAT:SYS:ALRM:%s"; }
+               in "STAT:SYS:ALRM:%#s";}
 
 
 # --------------- The following work around limitation of getting legacy status from SCPI protocol -------------
