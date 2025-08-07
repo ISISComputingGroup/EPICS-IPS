@@ -11,7 +11,7 @@ from .modes import (
     MagnetSupplyStatus,
     Mode,
     SweepMode,
-    TemperatureBoardStatus,
+    TemperatureBoardStatus, PressureBoardStatus,
 )
 from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState
 
@@ -127,9 +127,12 @@ class SimulatedIps(StateMachineDevice):
         self.magnet_supply_status = MagnetSupplyStatus.OK
 
         self.voltage_limit: float = 10.0
-        
+
+        # Daughter boards status - returned by READ:SYS:ALRM
         self.tempboard_status: TemperatureBoardStatus = TemperatureBoardStatus.OPEN_CIRCUIT
+        self.tempboard_10T_status: TemperatureBoardStatus = TemperatureBoardStatus.OK
         self.levelboard_status: LevelMeterBoardStatus = LevelMeterBoardStatus.OK
+        self.pressureboard_status: PressureBoardStatus = PressureBoardStatus.OK
 
         self.helium_empty_resistance: float = 25.0
         self.helium_full_resistance: float = 0.12
@@ -144,6 +147,10 @@ class SimulatedIps(StateMachineDevice):
         self.nitrogen_fill_start_level: int = 10
         self.nitrogen_fill_stop_level: int = 95
         self.nitrogen_level: int = 50
+
+        self.magnet_temperature: float = 4.2345  # Kelvin
+        self.lambda_plate_temperature: float =4.3456  # Kelvin
+        self.pressure: float = 28.3898  # mBar
 
 
     def _get_state_handlers(self) -> dict:
@@ -215,6 +222,16 @@ class SimulatedIps(StateMachineDevice):
                 (f"Invalid temperature board status value: {status_value}."
                  f" Must be one of {list(TemperatureBoardStatus)}")
             )
+    def set_tempboard_10T_status(self, status_value: int) -> None:
+        """Sets the temperature board 10T status."""
+        if status_value in iter(TemperatureBoardStatus):
+            status: TemperatureBoardStatus = TemperatureBoardStatus(status_value)
+            self.tempboard_10T_status = status
+        else:
+            raise ValueError(
+                (f"Invalid temperature board 10T status value: {status_value}."
+                 f" Must be one of {list(TemperatureBoardStatus)}")
+            )
 
     def set_levelboard_status(self, status_value: int) -> None:
         """Sets the temperature board status."""
@@ -226,6 +243,18 @@ class SimulatedIps(StateMachineDevice):
                 (f"Invalid level board status value: {status_value}."
                  f" Must be one of {list(LevelMeterBoardStatus)}")
             )
+
+    def set_pressureboard_status(self, status_value: int) -> None:
+        """Sets the pressure board status."""
+        if status_value in iter(PressureBoardStatus):
+            status: PressureBoardStatus = PressureBoardStatus(status_value)
+            self.pressureboard_status = status
+        else:
+            raise ValueError(
+                (f"Invalid pressure board status value: {status_value}."
+                 f" Must be one of {list(PressureBoardStatus)}")
+            )
+
 
     def get_nitrogen_refilling(self) -> bool:
         """Returns whether the nitrogen refilling is in progress."""
