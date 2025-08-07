@@ -3,7 +3,11 @@ from lewis.core.logging import has_log
 from lewis.utils.command_builder import CmdBuilder
 
 from ..device import amps_to_tesla, tesla_to_amps
-from ..modes import Activity, Control
+from ..modes import (Activity,
+                     Control,
+                     LevelMeterHeliumReadRate,
+                     TemperatureBoardStatus,
+                     LevelMeterBoardStatus, PressureBoardStatus)
 
 MODE_MAPPING = {
     'HOLD': Activity.HOLD,
@@ -27,8 +31,7 @@ class DeviceUID:
     magnet_temperature_sensor = "MB1.T1"
     level_meter = "DB1.L1"
     magnet_supply = "GRPZ"
-    # temperature_sensor_10T = "DB8.T1"
-    temperature_sensor_10t = "MB1.T1"
+    temperature_sensor_10T = "DB8.T1"
     pressure_sensor_10t = "DB5.P1"
 
 
@@ -143,7 +146,13 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("get_he_read_rate")
             .escape(f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW").eos().build(),
         CmdBuilder("set_he_read_rate")
-            .escape(f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:").int().eos().build(),
+            .escape(f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:").enum("OFF", "ON").eos().build(),
+        CmdBuilder("get_magnet_temperature")
+            .escape(f"READ:DEV:{DeviceUID.magnet_temperature_sensor}:TEMP:SIG:TEMP").eos().build(),
+        CmdBuilder("get_lambda_plate_temperature")
+            .escape(f"READ:DEV:{DeviceUID.temperature_sensor_10T}:TEMP:SIG:TEMP").eos().build(),
+        CmdBuilder("get_pressure")
+            .escape(f"READ:DEV:{DeviceUID.pressure_sensor_10t}:PRES:SIG:PRES").eos().build(),
 
     }
 
@@ -302,13 +311,19 @@ class IpsStreamInterface(StreamInterface):
         STAT:SYS:ALRM:MB1.T1<tab>Open Circuit;
         STAT:SYS:ALRM:DB1.L1<tab>Short Circuit;
         """
-        alarms = ["STAT:SYS:ALRM",]
-        if self.device.tempboard_status.value != 0:
-            alarms.append((f":{DeviceUID.magnet_temperature_sensor}\t"
-                           f"{self.device.tempboard_status.text()};"))
-        if self.device.levelboard_status.value != 0:
-            alarms.append((f":{DeviceUID.level_meter}\t"
-                           f"{self.device.levelboard_status.text()};"))
+        alarms = ["STAT:SYS:ALRM:",]
+        if self.device.tempboard_status != TemperatureBoardStatus.OK:
+            alarms.append((f"{DeviceUID.magnet_temperature_sensor}\t"
+                           f"{TemperatureBoardStatus.names()[self.device.tempboard_status.value]};"))
+        if self.device.tempboard_10T_status != TemperatureBoardStatus.OK:
+            alarms.append((f"{DeviceUID.temperature_sensor_10T}\t"
+                           f"{TemperatureBoardStatus.names()[self.device.tempboard_10T_status.value]};"))
+        if self.device.levelboard_status.value != LevelMeterBoardStatus.OK:
+            alarms.append((f"{DeviceUID.level_meter}\t"
+                           f"{LevelMeterBoardStatus.names()[self.device.levelboard_status.value]};"))
+        if self.device.pressureboard_status.value != PressureBoardStatus.OK:
+            alarms.append((f"{DeviceUID.pressure_sensor_10t}\t"
+                           f"{LevelMeterBoardStatus.names()[self.device.pressureboard_status.value]};"))
         alarm_list_str = "".join(alarms)
         return alarm_list_str
 
@@ -512,16 +527,44 @@ class IpsStreamInterface(StreamInterface):
         Gets the helium read rate.
         :return: A string indicating the helium read rate.
         """
-        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:"\
-               f"{self.device.helium_read_rate:d}"
-    
-    def set_he_read_rate(self, rate: int) -> str:
+        state: str = 'ON' if (self.device.helium_read_rate == LevelMeterHeliumReadRate.SLOW.value)\
+                    else 'OFF'
+
+        return f"STAT:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:{state}"
+
+    def set_he_read_rate(self, slow_rate: str) -> str:
         """
-        Sets the helium read rate.
-        :param rate: The helium read rate to set.
+        Sets the helium read slow_rate (from bo)
+        :param slow_rate: The helium read slow rate to set: OFF -> FAST, ON -> SLOW
         :return: A string indicating the success of the operation.
         """
-        self.device.helium_read_rate = rate
-        return f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:"\
-               f"{self.device.helium_read_rate:d}:VALID"
-    
+        self.device.helium_read_rate = LevelMeterHeliumReadRate.FAST.value if (slow_rate == "OFF") \
+            else LevelMeterHeliumReadRate.SLOW.value
+
+        return f"STAT:SET:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:{slow_rate}:VALID"
+
+    def get_magnet_temperature(self) -> str:
+        """
+        Gets the temperature of the magnet.
+        :return: The temperature in Kelvin.
+        """
+        return (f"STAT:DEV:{DeviceUID.magnet_temperature_sensor}:TEMP:SIG:TEMP:"
+               f"{self.device.magnet_temperature:.4f}K")
+
+    def get_lambda_plate_temperature(self) -> str:
+        """
+        Gets the temperature of the lambda plate.
+        :return: The temperature in Kelvin.
+        """
+        return (f"STAT:DEV:{DeviceUID.temperature_sensor_10T}:TEMP:SIG:TEMP:"
+                f"{self.device.lambda_plate_temperature:.4f}K")
+
+
+    def get_pressure(self) -> str:
+        """
+        Gets the pressure in mBar.
+        :return: The pressure in mBar.
+        """
+        #return self.device.pressure
+        return (f"STAT:DEV:{DeviceUID.pressure_sensor_10t}:PRES:SIG:PRES:"
+                f"{self.device.pressure:.4f}mB")
