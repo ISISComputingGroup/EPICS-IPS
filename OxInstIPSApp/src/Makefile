@@ -35,7 +35,7 @@ OxInstIPS_DBD += asubFunctions.dbd
 # OxInstIPS_registerRecordDeviceDriver.cpp will be created
 # OxInstIPS.dbd
 OxInstIPSIoc_SRCS += OxInstIPS_registerRecordDeviceDriver.cpp
-OxInstIPS_SRCS += alarms.c
+OxInstIPS_SRCS += alarms.cpp
 
 # These two lines are needed for non-vxWorks builds, such as Linux
 OxInstIPSIoc_SRCS_DEFAULT += OxInstIPSMain.cpp
