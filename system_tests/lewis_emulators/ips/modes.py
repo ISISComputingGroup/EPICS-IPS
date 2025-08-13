@@ -98,10 +98,13 @@ class TemperatureBoardStatus(BoardStatus):
     These alarms are returned in response to the READ:SYS:ALRM commnand returning errors as strings
     with the following example: STAT:SYS:ALRM:MB1.T1<tab>Open Circuit;
     
-    | Status        | Description                                | Bit Value | Bit Position |
-    |---------------|--------------------------------------------|-----------|--------------|
-    | Open Circuit  | Heater off - Open circuit on sensor input  | 00000001  | 0            |
-    | Short Circuit | Short circuit on sensor input              | 00000002  | 1            |
+    | Status               | Description                                | Bit Value | Bit Position |
+    |----------------------|--------------------------------------------|-----------|--------------|
+    | Open Circuit         | Heater off - Open circuit on sensor input  | 00000001  | 0            |
+    | Short Circuit        | Short circuit on sensor input              | 00000002  | 1            |
+    | Calibration          | On-board diagnostic: recalibrate           | 00000004  | 2            |
+    | Firmware Error       | Error in board firmware: restart iPS       | 00000008  | 3            |
+    | Board Not Configured | Firmware not loaded correctly: update f/w  | 00000010  | 4            |
 
 """
     OK = 0
@@ -150,7 +153,7 @@ class LevelMeterBoardStatus(BoardStatus):
     @classmethod
     def names(cls) -> list[str]:
         return ["", "Open circuit", "Short circuit", "ADC error", "Over demand",
-                "Over temperature", "Firmware error", "board not configured", "No reserve"]
+                "Over temperature", "Firmware error", "Board not configured", "No reserve"]
 
 class LevelMeterHeliumReadRate(IntEnum):
     """
@@ -178,12 +181,28 @@ class PressureBoardStatus(BoardStatus):
     |----------------------|-------------------------------------------|-----------|--------------|
     | Open Circuit         | Heater off - Open circuit on probe input  | 00000001  | 0            |
     | Short Circuit        | Short circuit on probe input              | 00000002  | 1            |
-    | ADC Error            | On-board diagnostic: recalibrate          | 00000004  | 2            |
-    | Over Demand          | On-board diagnostic: recalibrate          | 00000008  | 3            |
-    | Over Temperature     |                                           | 00000010  | 4            |
-    | Firmware Error       | Error in board firmware: restart iPS      | 00000020  | 5            |
-    | Board Not Configured | Firmware not loaded correctly: update f/w | 00000040  | 6            |
-    | No Reserve           | Autofill valve open but not filling       | 00000080  | 7            |
+    | Calibration Error    | On-board diagnostic: recalibrate          | 00000004  | 2            |
+    | Firmware error       | Error in board firmware: restart iPS      | 00000008  | 3            |
+    | Board Not Configured | Firmware not loaded correctly: update f/w | 00000010  | 4            |
+    | Over current         | Look for partial short circuits           | 00000020  | 5            |
+    | Current leakage      | Look for short to ground                  | 00000040  | 6            |
+    | Power on fail        | restart iPS                               | 00000080  | 7            |
+    | Checksum fail        | restart iPS                               | 00000100  | 8            |
+    | Clock fail           | restart iPS                               | 00000200  | 9            |
+    | ADC fail             | On-board diagnostic: recalibrate          | 00000400  | 10           |
+    | Mains fail           | restart iPS                               | 00000800  | 11           |
+    | Reference fail       | restart iPS                               | 00001000  | 12           |
+    | 12V fail             | restart iPS                               | 00002000  | 13           |
+    | -12V fail            | restart iPS                               | 00004000  | 14           |
+    | 8V fail              | restart iPS                               | 00008000  | 15           |
+    | -8V fail             | restart iPS                               | 00010000  | 16           |
+    | Ampl gain error      | restart iPS                               | 00020000  | 17           |
+    | Amp offset error     | restart iPS                               | 00040000  | 18           |
+    | ADC offset error     | restart iPS                               | 00060000  | 19           |
+    | ADC PGA error        | restart iPS                               | 00080000  | 20           |
+    | ADC XTAL error       | restart iPS                               | 00100000  | 21           |
+    | Excitation + error   | restart iPS                               | 00200000  | 22           |
+    | Excitation - error   | restart iPS                               | 00400000  | 23           |
 
 """
     OK = 0
@@ -206,10 +225,11 @@ class PressureBoardStatus(BoardStatus):
     MINUS8VFAIL = 17
     AMPGAIN_ERR = 18
     AMPOFFSET_ERR = 19
-    ADCPGA_ERR = 20
-    ADCXTAL_ERR = 21
-    PLUSEXCITE_ERR = 22
-    MINUSXCITE_ERR = 23
+    ADCOFFSET_ERR = 20
+    ADCPGA_ERR = 21
+    ADCXTAL_ERR = 22
+    PLUSEXCITE_ERR = 23
+    MINUSXCITE_ERR = 24
 
     @classmethod
     def names(cls) -> list[str]:
@@ -217,6 +237,6 @@ class PressureBoardStatus(BoardStatus):
                 "Board not configured", "Over current", "Current leakage", "Power on fail",
                 "Checksum fail", "Clock fail", "ADC fail", "Mains fail",
                 "Reference fail", "12V fail", "-12V fail", "8V fail", "-8V fail",
-                "Ampl gain error", "Amp offset error", "ADC PGA error", "ADC XTAL error",
-                "Excitation + error", "Excitation - error"]
+                "Ampl gain error", "Amp offset error", "ADC offset error", "ADC PGA error",
+                "ADC XTAL error", "Excitation + error", "Excitation - error"]
 
