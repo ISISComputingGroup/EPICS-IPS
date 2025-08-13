@@ -308,8 +308,7 @@ class IpsStreamInterface(StreamInterface):
     def get_system_alarms(self) -> str:
         """
         Returns the system alarms in the format:
-        STAT:SYS:ALRM:MB1.T1<tab>Open Circuit;
-        STAT:SYS:ALRM:DB1.L1<tab>Short Circuit;
+        STAT:SYS:ALRM:MB1.T1<tab>Open Circuit;DB1.L1<tab>Short Circuit;
         """
         alarms = ["STAT:SYS:ALRM:",]
         if self.device.tempboard_status != TemperatureBoardStatus.OK:
@@ -323,7 +322,7 @@ class IpsStreamInterface(StreamInterface):
                            f"{LevelMeterBoardStatus.names()[self.device.levelboard_status.value]};"))
         if self.device.pressureboard_status.value != PressureBoardStatus.OK:
             alarms.append((f"{DeviceUID.pressure_sensor_10t}\t"
-                           f"{LevelMeterBoardStatus.names()[self.device.pressureboard_status.value]};"))
+                           f"{PressureBoardStatus.names()[self.device.pressureboard_status.value]};"))
         alarm_list_str = "".join(alarms)
         return alarm_list_str
 
