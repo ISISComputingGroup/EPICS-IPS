@@ -1,6 +1,6 @@
-/* alarms.c
+/* alarms.cpp
  *
- * This C code contains the implementation of the aSub record for handling system alarm status.
+ * This C++ code contains the implementation of the aSub record for handling system alarm status.
  * It is part of the OxInstIPS application and is used to process alarm messages from the
  * system, specifically for the temperature, levels and pressure control boards.
  * Board identifiers are provided as macros and passed to the aSub as input fields B-E.
@@ -8,8 +8,8 @@
  * The aSub record processes alarm messages received from the system. The input is a string
  * containing the alarm message, which includes the board identifier and its status.
  * It extracts the board identifier and the alarm message, and writes them to the appropriate
- * output fields. The output fields (OUTA) reference mbbidirect records, where the bit patterns will be
- * established according to active alarms.
+ * output fields. The output fields (OUTA) reference mbbidirect records,
+ * where the bit patterns will be established according to active alarms.
  *
  * INPA - Input string containing the alarm message.
  * INPB - Board identifier form the magnet temperature controller (e.g. "MB1.T1")
@@ -46,18 +46,19 @@ using namespace std;
 // The number of control boards we are monitoring
 #define NBOARDS 4
 
-// The maximum number of tokens we expect in the status string
-#define MAX_TOKENS 32
-
-static const char *STATUS_TEXT_TEMPERATURE[] = {
+static const vector<string> STATUS_TEXT_TEMPERATURE(
+    {
     "Open circuit",
     "Short circuit",
     "Calibration error",
     "Firmware error",
     "Board not configured",
-};
+    }
+);
 
-static const char *STATUS_TEXT_LEVEL[] = {
+
+static const vector<string> STATUS_TEXT_LEVEL(
+    {
     "Open circuit",
     "Short circuit",
     "ADC error",
@@ -66,9 +67,11 @@ static const char *STATUS_TEXT_LEVEL[] = {
     "Firmware error",
     "Board not configured",
     "No reserve"
-};
+}
+);
 
-static const char *STATUS_TEXT_PRESSURE[] = {
+static const vector<string> STATUS_TEXT_PRESSURE(
+    {
     "Open circuit",
     "Short circuit",
     "Calibration error",
@@ -93,37 +96,40 @@ static const char *STATUS_TEXT_PRESSURE[] = {
     "ADC XTAL error",
     "Excitation + error",
     "Excitation - error"
-};
+});
 
 // Predetermine the number of status text entries for each board type
-#define NUM_STATUS_TEXT_TEMPERATURE (sizeof(STATUS_TEXT_TEMPERATURE) / sizeof(STATUS_TEXT_TEMPERATURE[0]))
-#define NUM_STATUS_TEXT_LEVEL (sizeof(STATUS_TEXT_LEVEL) / sizeof(STATUS_TEXT_LEVEL[0]))
-#define NUM_STATUS_TEXT_PRESSURE (sizeof(STATUS_TEXT_PRESSURE) / sizeof(STATUS_TEXT_PRESSURE[0]))
+#define NUM_STATUS_TEXT_TEMPERATURE STATUS_TEXT_TEMPERATURE.size()
+#define NUM_STATUS_TEXT_LEVEL STATUS_TEXT_LEVEL.size()
+#define NUM_STATUS_TEXT_PRESSURE STATUS_TEXT_PRESSURE.size()
 
-static const char **STATUS_TEXT_ARRAY[] = {
+static const vector<vector<string>> STATUS_TEXT_ARRAY(
+    {
     STATUS_TEXT_TEMPERATURE, // Magnet Temperature Controller Board}
     STATUS_TEXT_TEMPERATURE, // 10T Magnet Temperature Controller Board
     STATUS_TEXT_LEVEL,       // Levels Controller Board
     STATUS_TEXT_PRESSURE     // Pressure Controller Board
-};
+}
+);
 
 // Helper to reduce code complexity
-static const int STATUS_TEXT_ARRAY_SIZE[] = {
-    NUM_STATUS_TEXT_TEMPERATURE, // Magnet Temperature Controller Board
-    NUM_STATUS_TEXT_TEMPERATURE, // 10T Magnet Temperature Controller Board
-    NUM_STATUS_TEXT_LEVEL,       // Levels Controller Board
-    NUM_STATUS_TEXT_PRESSURE     // Pressure Controller Board
-};
+static const vector<size_t> STATUS_TEXT_ARRAY_SIZE( {
+    STATUS_TEXT_TEMPERATURE.size(), // Magnet Temperature Controller Board
+    STATUS_TEXT_TEMPERATURE.size(), // 10T Magnet Temperature Controller Board
+    STATUS_TEXT_LEVEL.size(),       // Levels Controller Board
+    STATUS_TEXT_PRESSURE.size()     // Pressure Controller Board
+});
 
-//epicsShareExtern??
 static long handle_system_alarm_status(aSubRecord *prec)
     {
     vector<string> token_list;
     vector<string> BOARD_ARRAY;
-    vector<long> out_bit_patterns(NBOARDS, 0); // vala, valb, valc, vald accumulated bit patterns
+    // vala, valb, valc, vald accumulated bit patterns.
+    // These ultimately will be written to mbbidirect records.
+    vector<epicsInt32> out_bit_patterns(NBOARDS, 0);
 
     if (
-        prec->fta != menuFtypeSTRING
+        prec->fta != menuFtypeCHAR
      || prec->ftb != menuFtypeSTRING
      || prec->ftc != menuFtypeSTRING
      || prec->ftd != menuFtypeSTRING
@@ -153,16 +159,19 @@ static long handle_system_alarm_status(aSubRecord *prec)
     //strcpy(BOARD_ARRAY[2], (char *)prec->d); // Levels Controller Board
     //strcpy(BOARD_ARRAY[3], (char *)prec->e); // Pressure Controller Board
 
-    errlogPrintf("%s: handle_system_alarm_status: names copied - getting status from INPA.\n", prec->name);
+    errlogPrintf("%s: handle_system_alarm_status: names copied - getting status from INPA.\n",
+                prec->name);
 
     string status = string((char *)((epicsOldString*)prec->a));
 
     errlogPrintf("handle_system_alarm_status: result=%s\n", status.c_str());
 
     // Tokenise the input string to extract the list of board+status.
-    // Of the form: "STAT:SYS:ALRM:DB8.T1<9>Open Circuit;MB1.T1<9>Short Circuit;DB1.L1<9>Over Demand;DB5.P1<9>Open Circuit;"
+    // Of the form:
+    // "STAT:SYS:ALRM:DB8.T1<9>Open Circuit;MB1.T1<9>Short Circuit;DB1.L1<9>Over Demand;DB5.P1<9>Open Circuit;"
     // Or empty if no alarms are present.
-    // We'll split the string by semicolons which will produce a list of <board ID><tab>status messages.
+    // We'll split the string by semicolons which will produce
+    // a list of <board ID><tab>status messages.
     stringstream check(status);
     string token;
     while (getline(check, token, ';'))
@@ -176,11 +185,13 @@ static long handle_system_alarm_status(aSubRecord *prec)
             token_list.push_back(token);
             }
         }
+
+    // Debug output to show the tokens we have extracted
     for(int i = 0; i < token_list.size(); i++)
         errlogPrintf("%s: token %d: %s\n", prec->name, i, token_list[i].c_str());
 
     // Now we have a list of tokens, each of which is of the form "<board ID><tab>status message".
-    // We will process each token to extract the board ID and status message.
+    // We will process each token to extract the board ID and corresponding status message.
     for (const auto& token : token_list)
         {
         size_t tab_pos = token.find('\t');
@@ -190,6 +201,9 @@ static long handle_system_alarm_status(aSubRecord *prec)
             continue; // Skip invalid tokens
             }
 
+        // Extract board ID and status message.
+        // The board ID is everything before the tab character
+        // and the status message is everything after the tab character.
         string board_id = token.substr(0, tab_pos);
         string status_message = token.substr(tab_pos + 1);
 
@@ -211,9 +225,10 @@ static long handle_system_alarm_status(aSubRecord *prec)
             }
 
         // Now we have the board index and the status message.
-        // We need to convert the status message to a numeric value.
+        // We need to convert the status message to a numeric value, which will represent
+        // the required bit position for the mbbidirect.
         int status_value = -1;
-        const char **status_text_array = STATUS_TEXT_ARRAY[board_index];
+        const vector<string> status_text_array = STATUS_TEXT_ARRAY[board_index];
         int num_status_text = STATUS_TEXT_ARRAY_SIZE[board_index];
 
         for (int j = 0; j < num_status_text; ++j)
@@ -231,7 +246,8 @@ static long handle_system_alarm_status(aSubRecord *prec)
             continue; // Skip unknown status messages
             }
 
-        out_bit_patterns[board_index] |= (1 << status_value); // Set the bit corresponding to the status value
+        // Set the bit corresponding to the status value
+        out_bit_patterns[board_index] |= (1 << status_value);
         } // for each token
 
         for (int board_index = 0; board_index < NBOARDS; ++board_index)
@@ -240,16 +256,20 @@ static long handle_system_alarm_status(aSubRecord *prec)
             switch (board_index)
                 {
                 case 0:
-                    prec->vala = (void *)out_bit_patterns[board_index]; // Magnet Temperature Controller Board
+                    // Magnet Temperature Controller Board
+                    *(epicsInt32*)prec->vala = out_bit_patterns[board_index];
                     break;
                 case 1:
-                    prec->valb = out_bit_patterns[board_index]; // 10T Magnet Temperature Controller Board
+                    // 10T Magnet Temperature Controller Board
+                    *(epicsInt32*)prec->valb = out_bit_patterns[board_index];
                     break;
                 case 2:
-                    prec->valc = out_bit_patterns[board_index]; // Levels Controller Board
+                    // Levels Controller Board
+                    *(epicsInt32*)prec->valc = out_bit_patterns[board_index];
                     break;
                 case 3:
-                    prec->vald = out_bit_patterns[board_index]; // Pressure Controller Board
+                    // Pressure Controller Board
+                    *(epicsInt32*)prec->vald = out_bit_patterns[board_index];
                     break;
                 default:
                     errlogPrintf("%s: Invalid board index: %d\n", prec->name, board_index);
