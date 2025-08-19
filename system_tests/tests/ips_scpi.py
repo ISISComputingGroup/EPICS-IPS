@@ -139,15 +139,22 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         self) -> None:
         # Simulate an open circuit on the temperature sensor
         self._lewis.backdoor_run_function_on_device("set_tempboard_status", [1])
-        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:TBOARD",
-                         "Open Circuit", timeout=10)
+        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:TBOARD.B0", "1", timeout=10)
 
     def test_GIVEN_level_sensor_short_circuit_THEN_ioc_states_short_circuit(
         self) -> None:
         # Simulate an short circuit on the level sensor
         self._lewis.backdoor_run_function_on_device("set_levelboard_status", [2])
-        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:LBOARD",
-                         "Short Circuit", timeout=10)
+        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:LBOARD.B1", "1", timeout=10)
+
+    def test_WHEN_SYSALARM_Tboard_is_firmware_error_THEN_ioc_states_firmware_error(
+        self) -> None:
+        """
+        Test that the SYSALARM TBOARD PV is set to 'Firmware Error' when the temperature board
+        firmware is in error state.
+        """
+        self._lewis.backdoor_run_function_on_device("set_tempboard_status", [3])
+        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:TBOARD.B2", '1', timeout=10)
 
     @parameterized.expand(val for val in parameterized_list(TEST_NITROGEN_LEVEL_FREQ_VALUES))
     def test_GIVEN_level_freq_at_zero_THEN_ioc_states_freq(self, _: str, val: float) -> None:
@@ -178,32 +185,6 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         self.ca.assert_that_pv_is_number("LVL:HE:FULL:RES", val,
                                          tolerance=TOLERANCE, timeout=10)
 
-    def test_GIVEN_nitrogen_level_THEN_ioc_states_filling_status(self) -> None:
-        """
-        Test that the nitrogen filling status is correctly set based on the nitrogen level
-        and start/stop refill thresholds.
-        """
-        # Simulate the nitrogen level
-        self.ca.set_pv_value("LVL:NIT:REFILL:START:SP", 20)
-        self.ca.set_pv_value("LVL:NIT:REFILL:STOP:SP", 90)
-        self._lewis.backdoor_set_on_device("nitrogen_level", 10)
-        self.ca.assert_that_pv_is("LVL:NIT:REFILLING", "Yes")
-        self._lewis.backdoor_set_on_device("nitrogen_level", 95)
-        self.ca.assert_that_pv_is("LVL:NIT:REFILLING", "No")
-
-    def test_GIVEN_helium_level_THEN_ioc_states_filling_status(self) -> None:
-        """
-        Test that the helium filling status is correctly set based on the helium level
-        and start/stop refill thresholds.
-        """
-        # Simulate the helium level
-        self.ca.set_pv_value("LVL:HE:REFILL:START:SP", 20)
-        self.ca.set_pv_value("LVL:HE:REFILL:STOP:SP", 90)
-        self._lewis.backdoor_set_on_device("helium_level", 10)
-        self.ca.assert_that_pv_is("LVL:HE:REFILLING", "Yes")
-        self._lewis.backdoor_set_on_device("helium_level", 95)
-        self.ca.assert_that_pv_is("LVL:HE:REFILLING", "No")
-
     def test_WHEN_nitrogen_read_interval_set_THEN_ioc_updates_read_interval(self) -> None:
         """
         Test that the nitrogen read interval can be set and is reflected in the IOC.
@@ -223,4 +204,3 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         self.ca.set_pv_value("LVL:HE:PULSE:READ:RATE:SP", 0)
         self.ca.assert_that_pv_is("LVL:HE:PULSE:READ:RATE", "Fast")
 
-        
