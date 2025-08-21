@@ -1,14 +1,18 @@
+import typing
 from lewis.core import approaches
 from lewis.core.statemachine import State
 
 from .modes import Activity
 
-SECS_PER_MIN = 60
+if typing.TYPE_CHECKING:
+    from .device import SimulatedIps
 
+
+SECS_PER_MIN = 60
 
 class HeaterOnState(State):
     def in_state(self, dt: float) -> None:
-        device = self._context
+        device = typing.cast("SimulatedIps", self._context)
 
         device.heater_current = approaches.linear(
             device.heater_current, device.HEATER_ON_CURRENT, device.HEATER_RAMP_RATE, dt
@@ -43,7 +47,7 @@ class HeaterOnState(State):
 
 class HeaterOffState(State):
     def in_state(self, dt: float) -> None:
-        device = self._context
+        device = typing.cast("SimulatedIps", self._context)
 
         device.heater_current = approaches.linear(
             device.heater_current, device.HEATER_OFF_CURRENT, device.HEATER_RAMP_RATE, dt

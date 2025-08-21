@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Callable
 
 from lewis.core.logging import has_log
 from lewis.devices import StateMachineDevice
@@ -14,6 +15,9 @@ from .modes import (
     TemperatureBoardStatus, PressureBoardStatus,
 )
 from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState
+from .states import State
+
+# Do not attempt to import DefaultState - it breaks the tests!
 
 # As long as no magnetic saturation effects are present,
 # there is a linear relationship between Teslas and Amps.
@@ -153,7 +157,7 @@ class SimulatedIps(StateMachineDevice):
         self.pressure: float = 28.3898  # mBar
 
 
-    def _get_state_handlers(self) -> dict:
+    def _get_state_handlers(self) -> dict[str, State]:
         return {
             "heater_off": HeaterOffState(),
             "heater_on": HeaterOnState(),
@@ -163,7 +167,7 @@ class SimulatedIps(StateMachineDevice):
     def _get_initial_state(self) -> str:
         return "heater_off"
 
-    def _get_transition_handlers(self) -> OrderedDict:
+    def _get_transition_handlers(self) ->  dict[tuple[str, str], Callable[[], bool]]:
         return OrderedDict(
             [
                 (("heater_off", "heater_on"), lambda: self.heater_on),
@@ -214,7 +218,7 @@ class SimulatedIps(StateMachineDevice):
 
     def set_tempboard_status(self, status_value: int) -> None:
         """Sets the temperature board status."""
-        if status_value in iter(TemperatureBoardStatus):
+        if status_value in list(iter(TemperatureBoardStatus)):
             status: TemperatureBoardStatus = TemperatureBoardStatus(status_value)
             self.tempboard_status = status
         else:
@@ -224,7 +228,7 @@ class SimulatedIps(StateMachineDevice):
             )
     def set_tempboard_10T_status(self, status_value: int) -> None:
         """Sets the temperature board 10T status."""
-        if status_value in iter(TemperatureBoardStatus):
+        if status_value in list(iter(TemperatureBoardStatus)):
             status: TemperatureBoardStatus = TemperatureBoardStatus(status_value)
             self.tempboard_10T_status = status
         else:
@@ -235,7 +239,7 @@ class SimulatedIps(StateMachineDevice):
 
     def set_levelboard_status(self, status_value: int) -> None:
         """Sets the temperature board status."""
-        if status_value in iter(LevelMeterBoardStatus):
+        if status_value in list(iter(LevelMeterBoardStatus)):
             status: LevelMeterBoardStatus = LevelMeterBoardStatus(status_value)
             self.levelboard_status = status
         else:
@@ -246,7 +250,7 @@ class SimulatedIps(StateMachineDevice):
 
     def set_pressureboard_status(self, status_value: int) -> None:
         """Sets the pressure board status."""
-        if status_value in iter(PressureBoardStatus):
+        if status_value in list(iter(PressureBoardStatus)):
             status: PressureBoardStatus = PressureBoardStatus(status_value)
             self.pressureboard_status = status
         else:

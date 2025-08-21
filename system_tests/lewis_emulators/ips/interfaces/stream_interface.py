@@ -1,9 +1,17 @@
-from lewis.adapters.stream import StreamInterface
-from lewis.core.logging import has_log
-from lewis.utils.command_builder import CmdBuilder
+import typing
+from functools import partial
+
+from lewis.adapters.stream import StreamInterface # pyright: ignore
+from lewis.core.logging import has_log # pyright: ignore
+from lewis.utils.command_builder import CmdBuilder # pyright: ignore
 
 from ..device import amps_to_tesla, tesla_to_amps
-from ..modes import Activity, Control
+from ..modes import Activity, Control, SweepMode
+
+# Ensure device has the appropriate type hinting for pyright
+if typing.TYPE_CHECKING:
+    from ..device import SimulatedIps
+
 
 MODE_MAPPING = {
     0: Activity.HOLD,
@@ -49,7 +57,7 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("get_magnet_inductance").escape("R24").eos().build(),
         CmdBuilder("set_control_mode")
         .escape("C")
-        .arg("0|1|2|3", argument_mapping=int)
+        .arg("0|1|2|3", argument_mapping=partial(int))
         .eos()
         .build(),
         CmdBuilder("set_mode").escape("A").int().eos().build(),
@@ -65,13 +73,16 @@ class IpsStreamInterface(StreamInterface):
     in_terminator = "\r"
     out_terminator = "\r"
 
-    def handle_error(self, request: str, error:str) -> str:
+    def __init__(self) -> None:
+        super(StreamInterface, self).__init__()
+        self.device: "SimulatedIps"
+
+    def handle_error(self, request: str, error:str) -> None:
         err_string = "command was: {}, error was: {}: {}\n".format(
             request, error.__class__.__name__, error
         )
         print(err_string)
-        self.log.error(err_string)
-        return err_string
+        self.log.error(err_string) # pyright: ignore
 
     @classmethod
     def get_version(cls) -> str:
@@ -207,5 +218,7 @@ class IpsStreamInterface(StreamInterface):
         return "T"
 
     def set_sweep_mode(self, mode: int) -> str:
-        self.device.sweep_mode = int(mode)
+        #self.device.sweep_mode = int(mode)
+        if mode < len(list(SweepMode)):
+            self.device.sweep_mode = list(SweepMode)[mode]
         return "M"

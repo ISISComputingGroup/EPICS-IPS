@@ -1,10 +1,10 @@
 import unittest
 
-from parameterized import parameterized
-from utils.channel_access import ChannelAccess
-from utils.ioc_launcher import get_default_ioc_dir
-from utils.test_modes import TestModes
-from utils.testing import get_running_lewis_and_ioc, parameterized_list
+from parameterized import parameterized # pyright: ignore
+from utils.channel_access import ChannelAccess # pyright: ignore
+from utils.ioc_launcher import get_default_ioc_dir # pyright: ignore
+from utils.test_modes import TestModes # pyright: ignore
+from utils.testing import get_running_lewis_and_ioc, parameterized_list # pyright: ignore
 
 from .ips_common import IpsBaseTests
 
@@ -69,7 +69,7 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         ioc_config = self._get_ioc_config()
 
         # Time to wait for the heater to warm up/cool down (extracted from IOC macros above)
-        heater_wait_time = float((ioc_config[0].get("macros").get("HEATER_WAITTIME")))
+        heater_wait_time = float((ioc_config[0].get("macros").get("HEATER_WAITTIME"))) # pyright: ignore
 
         self._lewis, self._ioc = get_running_lewis_and_ioc(EMULATOR_NAME, DEVICE_PREFIX)
         # Some changes happen on the order of HEATER_WAIT_TIME seconds.

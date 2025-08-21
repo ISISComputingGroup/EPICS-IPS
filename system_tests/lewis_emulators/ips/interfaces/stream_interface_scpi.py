@@ -1,4 +1,5 @@
-from lewis.adapters.stream import StreamInterface
+import typing
+from lewis.adapters.stream import StreamInterface  # pyright: ignore [reportMissingImports]
 from lewis.core.logging import has_log
 from lewis.utils.command_builder import CmdBuilder
 
@@ -8,6 +9,10 @@ from ..modes import (Activity,
                      LevelMeterHeliumReadRate,
                      TemperatureBoardStatus,
                      LevelMeterBoardStatus, PressureBoardStatus)
+
+if typing.TYPE_CHECKING:
+    from ..device import SimulatedIps
+
 
 MODE_MAPPING = {
     'HOLD': Activity.HOLD,
@@ -156,13 +161,17 @@ class IpsStreamInterface(StreamInterface):
 
     }
 
-    def handle_error(self, request: str, error: str) -> str:
+    def __init__(self) -> None:
+        super(StreamInterface, self).__init__()
+        self.device: "SimulatedIps"
+
+
+    def handle_error(self, request: str, error: str) -> None:
         err_string = "command was: {}, error was: {}: {}\n".format(
             request, error.__class__.__name__, error
         )
         print(err_string)
-        self.log.error(err_string)
-        return err_string
+        self.log.error(err_string) # pyright: ignore
 
     @staticmethod
     def get_version() -> str:
@@ -178,8 +187,10 @@ class IpsStreamInterface(StreamInterface):
         return "IDN:OXFORD INSTRUMENTS:MERCURY IPS:simulated:0.0.0"
 
     def get_activity(self) -> str:
-        for testmode in MODE_MAPPING:
-            if self.device.activity == MODE_MAPPING[testmode]:
+        testmode: str = ""
+        for tm in MODE_MAPPING:
+            if self.device.activity == MODE_MAPPING[tm]:
+                testmode = tm
                 break
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{testmode}"
 

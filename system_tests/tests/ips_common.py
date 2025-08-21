@@ -1,10 +1,12 @@
 
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
+from typing import ContextManager, Generator
 
-from parameterized import parameterized
-from utils.test_modes import TestModes
-from utils.testing import parameterized_list, unstable_test
+from parameterized import parameterized # pyright: ignore
+from utils.test_modes import TestModes # pyright: ignore
+from utils.testing import get_running_lewis_and_ioc, parameterized_list, unstable_test # pyright: ignore
+from utils.channel_access import ChannelAccess # pyright: ignore
 
 # Tell ruff to ignore the N802 warning (function name should be lowercase).
 # Names contain GIVEN, WHEN, THEN
@@ -56,13 +58,14 @@ class IpsBaseTests(object, metaclass=ABCMeta):
 
     @abstractmethod
     def setUp(self) -> None:
-        pass
+       self._lewis, self._ioc = get_running_lewis_and_ioc(EMULATOR_NAME, DEVICE_PREFIX)
+       self.ca = ChannelAccess(device_prefix=DEVICE_PREFIX)
 
     def tearDown(self) -> None:
         # Wait for statemachine to reach "at field" state after every test.
         self.ca.assert_that_pv_is("STATEMACHINE", "At field")
 
-        self.assertEqual(self._lewis.backdoor_get_from_device("quenched"), "False")
+        self.assertEqual(self._lewis.backdoor_get_from_device("quenched"), "False") # pyright: ignore
 
     def test_WHEN_ioc_is_started_THEN_ioc_is_not_disabled(self) -> None:
         self.ca.assert_that_pv_is("DISABLE", "COMMS ENABLED")
@@ -175,7 +178,7 @@ class IpsBaseTests(object, metaclass=ABCMeta):
         self._assert_field_is(val, check_stable=True)
 
     @contextmanager
-    def _backdoor_magnet_quench(self, reason: str="Test framework quench") -> None:
+    def _backdoor_magnet_quench(self, reason: str="Test framework quench") -> Generator[None, None, None]:
         self._lewis.backdoor_run_function_on_device("quench", [reason])
         try:
             yield
@@ -233,7 +236,8 @@ class IpsBaseTests(object, metaclass=ABCMeta):
         # act: set new field
         self.ca.set_pv_value("FIELD:SP", 4.56)
 
-        # assert: field starts to change by tolerance within timeout, then reaches within second timeout
-        # timeout present to prove new setpoint moved to _without_ waiting for heater, if already on
+        # assert: field starts to change by tolerance within timeout, then reaches within
+        # second timeout timeout present to prove new setpoint moved to
+        # _without_ waiting for heater, if already on
         self.ca.assert_that_pv_is_not_number("FIELD", 3.21, tolerance=0.01, timeout=20)
         self.ca.assert_that_pv_is_number("FIELD", 4.56, tolerance=0.01, timeout=60)
