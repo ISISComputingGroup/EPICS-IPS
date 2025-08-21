@@ -1,9 +1,9 @@
 import typing
 from functools import partial
 
-from lewis.adapters.stream import StreamInterface # pyright: ignore
-from lewis.core.logging import has_log # pyright: ignore
-from lewis.utils.command_builder import CmdBuilder # pyright: ignore
+from lewis.adapters.stream import StreamInterface  # pyright: ignore
+from lewis.core.logging import has_log  # pyright: ignore
+from lewis.utils.command_builder import CmdBuilder  # pyright: ignore
 
 from ..device import amps_to_tesla, tesla_to_amps
 from ..modes import Activity, Control, SweepMode

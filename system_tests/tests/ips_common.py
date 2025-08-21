@@ -1,12 +1,16 @@
-
+# ruff: noqa: N802
 from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
-from typing import ContextManager, Generator
+from typing import Generator
 
-from parameterized import parameterized # pyright: ignore
-from utils.test_modes import TestModes # pyright: ignore
-from utils.testing import get_running_lewis_and_ioc, parameterized_list, unstable_test # pyright: ignore
-from utils.channel_access import ChannelAccess # pyright: ignore
+from parameterized import parameterized  # pyright: ignore
+from utils.channel_access import ChannelAccess  # pyright: ignore
+from utils.test_modes import TestModes  # pyright: ignore
+from utils.testing import (  # pyright: ignore
+    get_running_lewis_and_ioc,
+    parameterized_list,
+    unstable_test,
+)
 
 # Tell ruff to ignore the N802 warning (function name should be lowercase).
 # Names contain GIVEN, WHEN, THEN

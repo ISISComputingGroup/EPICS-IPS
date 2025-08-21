@@ -11,11 +11,11 @@ from .modes import (
     LevelMeterHeliumReadRate,
     MagnetSupplyStatus,
     Mode,
+    PressureBoardStatus,
     SweepMode,
-    TemperatureBoardStatus, PressureBoardStatus,
+    TemperatureBoardStatus,
 )
-from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState
-from .states import State
+from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState, State
 
 # Do not attempt to import DefaultState - it breaks the tests!
 
@@ -226,7 +226,7 @@ class SimulatedIps(StateMachineDevice):
                 (f"Invalid temperature board status value: {status_value}."
                  f" Must be one of {list(TemperatureBoardStatus)}")
             )
-    def set_tempboard_10T_status(self, status_value: int) -> None:
+    def set_tempboard_10t_status(self, status_value: int) -> None:
         """Sets the temperature board 10T status."""
         if status_value in list(iter(TemperatureBoardStatus)):
             status: TemperatureBoardStatus = TemperatureBoardStatus(status_value)

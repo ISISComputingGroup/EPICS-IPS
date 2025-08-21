@@ -1,14 +1,18 @@
 import typing
+
 from lewis.adapters.stream import StreamInterface  # pyright: ignore [reportMissingImports]
 from lewis.core.logging import has_log
 from lewis.utils.command_builder import CmdBuilder
 
 from ..device import amps_to_tesla, tesla_to_amps
-from ..modes import (Activity,
-                     Control,
-                     LevelMeterHeliumReadRate,
-                     TemperatureBoardStatus,
-                     LevelMeterBoardStatus, PressureBoardStatus)
+from ..modes import (
+    Activity,
+    Control,
+    LevelMeterBoardStatus,
+    LevelMeterHeliumReadRate,
+    PressureBoardStatus,
+    TemperatureBoardStatus,
+)
 
 if typing.TYPE_CHECKING:
     from ..device import SimulatedIps
@@ -36,7 +40,7 @@ class DeviceUID:
     magnet_temperature_sensor = "MB1.T1"
     level_meter = "DB1.L1"
     magnet_supply = "GRPZ"
-    temperature_sensor_10T = "DB8.T1"
+    temperature_sensor_10t = "DB8.T1"
     pressure_sensor_10t = "DB5.P1"
 
 
@@ -151,11 +155,12 @@ class IpsStreamInterface(StreamInterface):
         CmdBuilder("get_he_read_rate")
             .escape(f"READ:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW").eos().build(),
         CmdBuilder("set_he_read_rate")
-            .escape(f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:").enum("OFF", "ON").eos().build(),
+            .escape(f"SET:DEV:{DeviceUID.level_meter}:LVL:HEL:PULS:SLOW:")
+            .enum("OFF", "ON").eos().build(),
         CmdBuilder("get_magnet_temperature")
             .escape(f"READ:DEV:{DeviceUID.magnet_temperature_sensor}:TEMP:SIG:TEMP").eos().build(),
         CmdBuilder("get_lambda_plate_temperature")
-            .escape(f"READ:DEV:{DeviceUID.temperature_sensor_10T}:TEMP:SIG:TEMP").eos().build(),
+            .escape(f"READ:DEV:{DeviceUID.temperature_sensor_10t}:TEMP:SIG:TEMP").eos().build(),
         CmdBuilder("get_pressure")
             .escape(f"READ:DEV:{DeviceUID.pressure_sensor_10t}:PRES:SIG:PRES").eos().build(),
 
@@ -326,7 +331,7 @@ class IpsStreamInterface(StreamInterface):
             alarms.append((f"{DeviceUID.magnet_temperature_sensor}\t"
                            f"{TemperatureBoardStatus.names()[self.device.tempboard_status.value]};"))
         if self.device.tempboard_10T_status != TemperatureBoardStatus.OK:
-            alarms.append((f"{DeviceUID.temperature_sensor_10T}\t"
+            alarms.append((f"{DeviceUID.temperature_sensor_10t}\t"
                            f"{TemperatureBoardStatus.names()[self.device.tempboard_10T_status.value]};"))
         if self.device.levelboard_status.value != LevelMeterBoardStatus.OK:
             alarms.append((f"{DeviceUID.level_meter}\t"
@@ -566,7 +571,7 @@ class IpsStreamInterface(StreamInterface):
         Gets the temperature of the lambda plate.
         :return: The temperature in Kelvin.
         """
-        return (f"STAT:DEV:{DeviceUID.temperature_sensor_10T}:TEMP:SIG:TEMP:"
+        return (f"STAT:DEV:{DeviceUID.temperature_sensor_10t}:TEMP:SIG:TEMP:"
                 f"{self.device.lambda_plate_temperature:.4f}K")
 
 
