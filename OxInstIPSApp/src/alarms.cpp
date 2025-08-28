@@ -161,6 +161,10 @@ static long handle_system_alarm_status(aSubRecord *prec)
     BOARD_ARRAY.push_back("DB1.L1"); // Levels Controller Board
     BOARD_ARRAY.push_back("DB5.P1"); // Pressure Controller Board
 
+    // *** The following is not used as we are using fixed board IDs above.                      ***
+    // *** It would be better to pass these strings from the EPICS layer but the code below      ***
+    // *** caused the subroutine to crash. Probably a pointer issue, but I have to draw the line ***
+    // *** somewhere with the intention to do it properly at a later date.                       ***
     // Populate the BOARD_ARRAY with the board identifiers from the input fields.
     // Typically: "MB1.T1", "DB8.T1", "DB1.L1", "DB5.P1"
     //strcpy(BOARD_ARRAY[0], (char *)prec->b); // Magnet Temperature Controller Board
