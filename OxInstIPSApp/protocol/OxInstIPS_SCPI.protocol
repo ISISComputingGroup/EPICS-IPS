@@ -301,10 +301,10 @@ setLevelNitFillStopThreshold { out "SET:DEV:" $level_meter ":LVL:NIT:HIGH:%d";
 #                       in  "STAT:DEV:" $level_meter ":LVL:NIT:RFL:%{OFF|ON}";}
 
 getLevelNitrogenLevel { out "READ:DEV:" $level_meter ":LVL:SIG:NIT:LEV";
-                        in  "STAT:DEV:" $level_meter ":LVL:SIG:NIT:LEV:%d";}
+                        in  "STAT:DEV:" $level_meter ":LVL:SIG:NIT:LEV:%f";}
 
 getLevelHeliumLevel { out "READ:DEV:" $level_meter ":LVL:SIG:HEL:LEV";
-                      in  "STAT:DEV:" $level_meter ":LVL:SIG:HEL:LEV:%d";}
+                      in  "STAT:DEV:" $level_meter ":LVL:SIG:HEL:LEV:%f";}
 
 # -------------------------------------------------------
 #    TEMPERATURE BOARD COMMANDS

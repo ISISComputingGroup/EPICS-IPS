@@ -66,7 +66,8 @@ static const vector<string> STATUS_TEXT_LEVEL(
     "Over temperature",
     "Firmware error",
     "Board not configured",
-    "No reserve"
+    "No reserve",
+    "Magnet Safety"
 }
 );
 
@@ -120,6 +121,16 @@ static const vector<size_t> STATUS_TEXT_ARRAY_SIZE( {
     STATUS_TEXT_PRESSURE.size()     // Pressure Controller Board
 });
 
+// Helper function for case-insensitive string comparison
+bool strcmp_nocase(const string& a, const string& b)
+{
+    return std::equal(a.begin(), a.end(),
+                      b.begin(), b.end(),
+                      [](char a, char b) {
+                          return tolower(a) == tolower(b);
+                      });
+}
+
 static long handle_system_alarm_status(aSubRecord *prec)
     {
     vector<string> token_list;
@@ -145,8 +156,6 @@ static long handle_system_alarm_status(aSubRecord *prec)
          return -1;
         }
 
-    errlogPrintf("%s: handle_system_alarm_status: about to copy names.\n", prec->name);
-
     BOARD_ARRAY.push_back("MB1.T1"); // Magnet Temperature Controller Board
     BOARD_ARRAY.push_back("DB8.T1"); // 10T Magnet Temperature Controller Board
     BOARD_ARRAY.push_back("DB1.L1"); // Levels Controller Board
@@ -159,12 +168,7 @@ static long handle_system_alarm_status(aSubRecord *prec)
     //strcpy(BOARD_ARRAY[2], (char *)prec->d); // Levels Controller Board
     //strcpy(BOARD_ARRAY[3], (char *)prec->e); // Pressure Controller Board
 
-    errlogPrintf("%s: handle_system_alarm_status: names copied - getting status from INPA.\n",
-                prec->name);
-
     string status = string((char *)((epicsOldString*)prec->a));
-
-    errlogPrintf("handle_system_alarm_status: result=%s\n", status.c_str());
 
     // Tokenise the input string to extract the list of board+status.
     // Of the form:
@@ -187,8 +191,8 @@ static long handle_system_alarm_status(aSubRecord *prec)
         }
 
     // Debug output to show the tokens we have extracted
-    for(int i = 0; i < token_list.size(); i++)
-        errlogPrintf("%s: token %d: %s\n", prec->name, i, token_list[i].c_str());
+    // for(int i = 0; i < token_list.size(); i++)
+    //    errlogPrintf("%s: token %d: %s\n", prec->name, i, token_list[i].c_str());
 
     // Now we have a list of tokens, each of which is of the form "<board ID><tab>status message".
     // We will process each token to extract the board ID and corresponding status message.
@@ -233,7 +237,7 @@ static long handle_system_alarm_status(aSubRecord *prec)
 
         for (int j = 0; j < num_status_text; ++j)
             {
-            if (status_message == status_text_array[j])
+            if (strcmp_nocase(status_message, status_text_array[j]))
                 {
                 status_value = j;
                 break;
