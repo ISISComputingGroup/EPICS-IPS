@@ -316,10 +316,6 @@ class IpsStreamInterface(StreamInterface):
         # Set the default return value to invalid (guilty until proven innocent)
         ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{mode}:INVALID"
 
-        for testmode in MODE_MAPPING:
-            if mode == MODE_MAPPING[testmode].value:
-                break
-
         try:
             self.device.activity = MODE_MAPPING[mode]
             ret = f"STAT:SET:DEV:{DeviceUID.magnet_supply}:PSU:ACTN:{mode}:VALID"
