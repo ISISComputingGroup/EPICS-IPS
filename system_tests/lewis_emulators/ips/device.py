@@ -28,20 +28,23 @@ from .states import HeaterOffState, HeaterOnState, MagnetQuenchedState, State
 LOAD_LINE_GRADIENT = 0.01
 
 
-def amps_to_tesla(amps: float) ->float:
+def amps_to_tesla(amps: float) -> float:
     return amps * LOAD_LINE_GRADIENT
 
 
 def tesla_to_amps(tesla: float) -> float:
     return tesla / LOAD_LINE_GRADIENT
 
+
 def set_bit_value(value: int, bit_value: int) -> int:
     """Sets a bit at the position implied by the value."""
     return value | bit_value
 
+
 def clear_bit_value(value: int, bit_value: int) -> int:
     """Clears a bit at the specified position implied by the value."""
     return value & ~bit_value
+
 
 @has_log
 class SimulatedIps(StateMachineDevice):
@@ -60,8 +63,7 @@ class SimulatedIps(StateMachineDevice):
     HEATER_RAMP_RATE = 5
 
     def _initialize_data(self) -> None:
-        """Initialize all of the device's attributes.
-        """
+        """Initialize all of the device's attributes."""
         self.reset()
 
     def reset(self) -> None:
@@ -110,7 +112,7 @@ class SimulatedIps(StateMachineDevice):
         # Hard-code this here for now - can't be changed on real device.
         self.inductance: float = 0.005
 
-        # No idea what sensible values are here. 
+        # No idea what sensible values are here.
         # Also not clear what the behaviour is of the controller when these limits are hit.
         self.neg_current_limit, self.pos_current_limit = -(10**6), 10**6
 
@@ -145,7 +147,7 @@ class SimulatedIps(StateMachineDevice):
         self.helium_level: int = 50
         self.helium_read_rate: int = LevelMeterHeliumReadRate.FAST.value
 
-        self.nitrogen_read_interval: int = 750 # milliseconds
+        self.nitrogen_read_interval: int = 750  # milliseconds
         self.nitrogen_frequency_at_zero: float = 1.0
         self.nitrogen_frequency_at_full: float = 100.0
         self.nitrogen_fill_start_level: int = 10
@@ -153,9 +155,8 @@ class SimulatedIps(StateMachineDevice):
         self.nitrogen_level: int = 50
 
         self.magnet_temperature: float = 4.2345  # Kelvin
-        self.lambda_plate_temperature: float =4.3456  # Kelvin
+        self.lambda_plate_temperature: float = 4.3456  # Kelvin
         self.pressure: float = 28.3898  # mBar
-
 
     def _get_state_handlers(self) -> dict[str, State]:
         return {
@@ -167,7 +168,7 @@ class SimulatedIps(StateMachineDevice):
     def _get_initial_state(self) -> str:
         return "heater_off"
 
-    def _get_transition_handlers(self) ->  dict[tuple[str, str], Callable[[], bool]]:
+    def _get_transition_handlers(self) -> dict[tuple[str, str], Callable[[], bool]]:
         return OrderedDict(
             [
                 (("heater_off", "heater_on"), lambda: self.heater_on),
@@ -181,22 +182,23 @@ class SimulatedIps(StateMachineDevice):
         )
 
     def quench(self, reason: str) -> None:
-        self.log.info("Magnet quenching at current={} because: {}"
-                      .format(self.current, reason))
+        self.log.info("Magnet quenching at current={} because: {}".format(self.current, reason))
         self.trip_current = self.current
         self.magnet_current = 0
         self.current = 0
         self.measured_current = 0
         self.quenched = True  # Causes LeWiS to enter Quenched state
         # For the SCPI protocol, we set the magnet supply status to indicate a quench
-        self.magnet_supply_status = set_bit_value(self.magnet_supply_status,
-                                                  MagnetSupplyStatus.QUENCH_DETECTED)
+        self.magnet_supply_status = set_bit_value(
+            self.magnet_supply_status, MagnetSupplyStatus.QUENCH_DETECTED
+        )
 
     def unquench(self) -> None:
         self.quenched = False
         # For the SCPI protocol, we set the magnet supply status to clear a quench status
-        self.magnet_supply_status = clear_bit_value(self.magnet_supply_status,
-                                                    MagnetSupplyStatus.QUENCH_DETECTED)
+        self.magnet_supply_status = clear_bit_value(
+            self.magnet_supply_status, MagnetSupplyStatus.QUENCH_DETECTED
+        )
 
     def get_voltage(self) -> float:
         """Gets the voltage of the PSU.
@@ -223,9 +225,12 @@ class SimulatedIps(StateMachineDevice):
             self.tempboard_status = status
         else:
             raise ValueError(
-                (f"Invalid temperature board status value: {status_value}."
-                 f" Must be one of {list(TemperatureBoardStatus)}")
+                (
+                    f"Invalid temperature board status value: {status_value}."
+                    f" Must be one of {list(TemperatureBoardStatus)}"
+                )
             )
+
     def set_tempboard_10t_status(self, status_value: int) -> None:
         """Sets the temperature board 10T status."""
         if status_value in list(iter(TemperatureBoardStatus)):
@@ -233,8 +238,10 @@ class SimulatedIps(StateMachineDevice):
             self.tempboard_10T_status = status
         else:
             raise ValueError(
-                (f"Invalid temperature board 10T status value: {status_value}."
-                 f" Must be one of {list(TemperatureBoardStatus)}")
+                (
+                    f"Invalid temperature board 10T status value: {status_value}."
+                    f" Must be one of {list(TemperatureBoardStatus)}"
+                )
             )
 
     def set_levelboard_status(self, status_value: int) -> None:
@@ -244,8 +251,10 @@ class SimulatedIps(StateMachineDevice):
             self.levelboard_status = status
         else:
             raise ValueError(
-                (f"Invalid level board status value: {status_value}."
-                 f" Must be one of {list(LevelMeterBoardStatus)}")
+                (
+                    f"Invalid level board status value: {status_value}."
+                    f" Must be one of {list(LevelMeterBoardStatus)}"
+                )
             )
 
     def set_pressureboard_status(self, status_value: int) -> None:
@@ -255,12 +264,12 @@ class SimulatedIps(StateMachineDevice):
             self.pressureboard_status = status
         else:
             raise ValueError(
-                (f"Invalid pressure board status value: {status_value}."
-                 f" Must be one of {list(PressureBoardStatus)}")
+                (
+                    f"Invalid pressure board status value: {status_value}."
+                    f" Must be one of {list(PressureBoardStatus)}"
+                )
             )
-
 
     def get_nitrogen_refilling(self) -> bool:
         """Returns whether the nitrogen refilling is in progress."""
         return self.nitrogen_fill_start_level < self.nitrogen_level < self.nitrogen_fill_stop_level
-    

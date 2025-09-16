@@ -11,6 +11,7 @@ if typing.TYPE_CHECKING:
 
 SECS_PER_MIN = 60
 
+
 class HeaterOnState(State):
     def in_state(self, dt: float) -> None:
         device = typing.cast("SimulatedIps", self._context)
@@ -42,8 +43,7 @@ class HeaterOnState(State):
 
         elif device.activity == Activity.TO_ZERO:
             device.current = approaches.linear(device.current, 0, curr_ramp_rate, dt)
-            device.magnet_current = approaches.linear(device.magnet_current,
-                                                      0, curr_ramp_rate, dt)
+            device.magnet_current = approaches.linear(device.magnet_current, 0, curr_ramp_rate, dt)
 
 
 class HeaterOffState(State):

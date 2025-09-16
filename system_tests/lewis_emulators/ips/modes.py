@@ -51,7 +51,8 @@ class MagnetSupplyStatus(IntEnum):
 
     This information is not published and was derived from
     direct questions to Oxford Instruments.
-"""
+    """
+
     OK = 0x00000000
     SWITCH_HEATER_MISMATCH = 0x00000001
     OVER_TEMPERATURE_RUNDOWN_RESISTORS = 0x00000002
@@ -70,6 +71,7 @@ class MagnetSupplyStatus(IntEnum):
     VOLTAGE_ADC_ERROR = 0x00010000
     CURRENT_ADC_ERROR = 0x00020000
 
+
 class BoardStatus(IntEnum):
     """
     Provides the base functionality for board status enums and provides methods to lookup
@@ -78,12 +80,13 @@ class BoardStatus(IntEnum):
     to return a list of strings that represent the status values. This abstract method must be
     implemented in any subclass of BoardStatus.
     """
+
     @classmethod
     @abstractmethod
-    def names(cls)->list[str]:
+    def names(cls) -> list[str]:
         return []
 
-    def text(self)->str:
+    def text(self) -> str:
         try:
             ret = self.__class__.names()[self.value]
         except IndexError:
@@ -97,7 +100,7 @@ class TemperatureBoardStatus(BoardStatus):
     and is only applicable to the IPS SCPI protocol.
     These alarms are returned in response to the READ:SYS:ALRM commnand returning errors as strings
     with the following example: STAT:SYS:ALRM:MB1.T1<tab>Open Circuit;
-    
+
     | Status               | Description                                | Bit Value | Bit Position |
     |----------------------|--------------------------------------------|-----------|--------------|
     | Open Circuit         | Heater off - Open circuit on sensor input  | 00000001  | 0            |
@@ -106,7 +109,8 @@ class TemperatureBoardStatus(BoardStatus):
     | Firmware Error       | Error in board firmware: restart iPS       | 00000008  | 3            |
     | Board Not Configured | Firmware not loaded correctly: update f/w  | 00000010  | 4            |
 
-"""
+    """
+
     OK = 0
     OPEN_CIRCUIT = 1
     SHORT_CIRCUIT = 2
@@ -116,9 +120,14 @@ class TemperatureBoardStatus(BoardStatus):
 
     @classmethod
     def names(cls) -> list[str]:
-        return ["", "Open circuit", "Short circuit", "Calibration error",
-                "Firmware error", "Board not configured"]
-
+        return [
+            "",
+            "Open circuit",
+            "Short circuit",
+            "Calibration error",
+            "Firmware error",
+            "Board not configured",
+        ]
 
 
 class LevelMeterBoardStatus(BoardStatus):
@@ -139,7 +148,8 @@ class LevelMeterBoardStatus(BoardStatus):
     | Board Not Configured | Firmware not loaded correctly: update f/w | 00000040  | 6            |
     | No Reserve           | Autofill valve open but not filling       | 00000080  | 7            |
 
-"""
+    """
+
     OK = 0
     OPEN_CIRCUIT = 1
     SHORT_CIRCUIT = 2
@@ -149,19 +159,30 @@ class LevelMeterBoardStatus(BoardStatus):
     FIRMWARE_ERROR = 6
     BOARD_NOT_CONFIGURED = 7
     NO_RESERVE = 8
-    
+
     @classmethod
     def names(cls) -> list[str]:
-        return ["", "Open circuit", "Short circuit", "ADC error", "Over demand",
-                "Over temperature", "Firmware error", "Board not configured", "No reserve"]
+        return [
+            "",
+            "Open circuit",
+            "Short circuit",
+            "ADC error",
+            "Over demand",
+            "Over temperature",
+            "Firmware error",
+            "Board not configured",
+            "No reserve",
+        ]
+
 
 class LevelMeterHeliumReadRate(IntEnum):
     """
     This class represents the read rate of the helium level meter.
     It is only applicable to the IPS SCPI protocol.
-    The read rate is used to determine how often the helium level is read, using the 
+    The read rate is used to determine how often the helium level is read, using the
     DEV:<UID>:LVL:HEL:PULS:SLOW:[0|1] command.
     """
+
     SLOW = 0
     FAST = 1
 
@@ -204,7 +225,8 @@ class PressureBoardStatus(BoardStatus):
     | Excitation + error   | restart iPS                               | 00200000  | 22           |
     | Excitation - error   | restart iPS                               | 00400000  | 23           |
 
-"""
+    """
+
     OK = 0
     OPEN_CIRCUIT = 1
     SHORT_CIRCUIT = 2
@@ -233,10 +255,30 @@ class PressureBoardStatus(BoardStatus):
 
     @classmethod
     def names(cls) -> list[str]:
-        return ["", "Open circuit", "Short circuit", "Calibration error", "Firmware error",
-                "Board not configured", "Over current", "Current leakage", "Power on fail",
-                "Checksum fail", "Clock fail", "ADC fail", "Mains fail",
-                "Reference fail", "12V fail", "-12V fail", "8V fail", "-8V fail",
-                "Ampl gain error", "Amp offset error", "ADC offset error", "ADC PGA error",
-                "ADC XTAL error", "Excitation + error", "Excitation - error"]
-
+        return [
+            "",
+            "Open circuit",
+            "Short circuit",
+            "Calibration error",
+            "Firmware error",
+            "Board not configured",
+            "Over current",
+            "Current leakage",
+            "Power on fail",
+            "Checksum fail",
+            "Clock fail",
+            "ADC fail",
+            "Mains fail",
+            "Reference fail",
+            "12V fail",
+            "-12V fail",
+            "8V fail",
+            "-8V fail",
+            "Ampl gain error",
+            "Amp offset error",
+            "ADC offset error",
+            "ADC PGA error",
+            "ADC XTAL error",
+            "Excitation + error",
+            "Excitation - error",
+        ]

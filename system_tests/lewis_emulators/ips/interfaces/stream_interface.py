@@ -77,12 +77,12 @@ class IpsStreamInterface(StreamInterface):
         super(StreamInterface, self).__init__()
         self.device: "SimulatedIps"
 
-    def handle_error(self, request: str, error:str) -> None:
+    def handle_error(self, request: str, error: str) -> None:
         err_string = "command was: {}, error was: {}: {}\n".format(
             request, error.__class__.__name__, error
         )
         print(err_string)
-        self.log.error(err_string) # pyright: ignore
+        self.log.error(err_string)  # pyright: ignore
 
     @classmethod
     def get_version(cls) -> str:
@@ -218,7 +218,7 @@ class IpsStreamInterface(StreamInterface):
         return "T"
 
     def set_sweep_mode(self, mode: int) -> str:
-        #self.device.sweep_mode = int(mode)
+        # self.device.sweep_mode = int(mode)
         if mode < len(list(SweepMode)):
             self.device.sweep_mode = list(SweepMode)[mode]
         return "M"
