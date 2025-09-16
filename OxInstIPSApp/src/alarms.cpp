@@ -161,17 +161,6 @@ static long handle_system_alarm_status(aSubRecord *prec)
     BOARD_ARRAY.push_back("DB1.L1"); // Levels Controller Board
     BOARD_ARRAY.push_back("DB5.P1"); // Pressure Controller Board
 
-    // *** The following is not used as we are using fixed board IDs above.                      ***
-    // *** It would be better to pass these strings from the EPICS layer but the code below      ***
-    // *** caused the subroutine to crash. Probably a pointer issue, but I have to draw the line ***
-    // *** somewhere with the intention to do it properly at a later date.                       ***
-    // Populate the BOARD_ARRAY with the board identifiers from the input fields.
-    // Typically: "MB1.T1", "DB8.T1", "DB1.L1", "DB5.P1"
-    //strcpy(BOARD_ARRAY[0], (char *)prec->b); // Magnet Temperature Controller Board
-    //strcpy(BOARD_ARRAY[1], (char *)prec->c); // 10T Magnet Temperature Controller Board
-    //strcpy(BOARD_ARRAY[2], (char *)prec->d); // Levels Controller Board
-    //strcpy(BOARD_ARRAY[3], (char *)prec->e); // Pressure Controller Board
-
     string status = string((char *)((epicsOldString*)prec->a));
 
     // Tokenise the input string to extract the list of board+status.
@@ -193,10 +182,6 @@ static long handle_system_alarm_status(aSubRecord *prec)
             token_list.push_back(token);
             }
         }
-
-    // Debug output to show the tokens we have extracted
-    // for(int i = 0; i < token_list.size(); i++)
-    //    errlogPrintf("%s: token %d: %s\n", prec->name, i, token_list[i].c_str());
 
     // Now we have a list of tokens, each of which is of the form "<board ID><tab>status message".
     // We will process each token to extract the board ID and corresponding status message.
@@ -258,32 +243,32 @@ static long handle_system_alarm_status(aSubRecord *prec)
         out_bit_patterns[board_index] |= (1 << status_value);
         } // for each token
 
-        for (int board_index = 0; board_index < NBOARDS; ++board_index)
+    for (int board_index = 0; board_index < NBOARDS; ++board_index)
+        {
+        // Write the status value to the appropriate output field
+        switch (board_index)
             {
-            // Write the status value to the appropriate output field
-            switch (board_index)
-                {
-                case 0:
-                    // Magnet Temperature Controller Board
-                    *(epicsInt32*)prec->vala = out_bit_patterns[board_index];
-                    break;
-                case 1:
-                    // 10T Magnet Temperature Controller Board
-                    *(epicsInt32*)prec->valb = out_bit_patterns[board_index];
-                    break;
-                case 2:
-                    // Levels Controller Board
-                    *(epicsInt32*)prec->valc = out_bit_patterns[board_index];
-                    break;
-                case 3:
-                    // Pressure Controller Board
-                    *(epicsInt32*)prec->vald = out_bit_patterns[board_index];
-                    break;
-                default:
-                    errlogPrintf("%s: Invalid board index: %d\n", prec->name, board_index);
-                    break;
-                }
+            case 0:
+                // Magnet Temperature Controller Board
+                *(epicsInt32*)prec->vala = out_bit_patterns[board_index];
+                break;
+            case 1:
+                // 10T Magnet Temperature Controller Board
+                *(epicsInt32*)prec->valb = out_bit_patterns[board_index];
+                break;
+            case 2:
+                // Levels Controller Board
+                *(epicsInt32*)prec->valc = out_bit_patterns[board_index];
+                break;
+            case 3:
+                // Pressure Controller Board
+                *(epicsInt32*)prec->vald = out_bit_patterns[board_index];
+                break;
+            default:
+                errlogPrintf("%s: Invalid board index: %d\n", prec->name, board_index);
+                break;
             }
+        }
     return 0; // Process output links
     }
 
