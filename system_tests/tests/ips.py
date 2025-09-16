@@ -66,6 +66,7 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
     """
     Tests for the Ips legacy protocol IOC.
     """
+
     def _get_device_prefix(self) -> str:
         return DEVICE_PREFIX
 
@@ -116,7 +117,7 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
 
     @parameterized.expand(field for field in parameterized_list(TEST_VALUES))
     def test_GIVEN_magnet_quenches_while_at_field_THEN_ioc_displays_this_quench_in_statuses(
-        self, _:str, field : float
+        self, _: str, field: float
     ) -> None:
         self._set_and_check_persistent_mode(False)
         self.ca.set_pv_value("FIELD:SP", field)
@@ -136,9 +137,7 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
             # (mirroring what the field ought to do in the real device)
             self.ca.assert_that_pv_is_number("FIELD", 0, tolerance=TOLERANCE)
             self.ca.assert_that_pv_is_number("FIELD:USER", 0, tolerance=TOLERANCE)
-            self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", 
-                                             0, 
-                                             tolerance=TOLERANCE)
+            self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", 0, tolerance=TOLERANCE)
 
     # These tests for locking and unlocking the remote control are only applicable
     # to the legacy protocol. SCPI does not have a remote control lock.
@@ -146,7 +145,7 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
         control_command for control_command in parameterized_list(CONTROL_COMMANDS_WITH_VALUES)
     )
     def test_WHEN_control_command_value_set_THEN_remote_unlocked_set(
-        self, _:str, control_pv: str, set_value: str
+        self, _: str, control_pv: str, set_value: str
     ) -> None:
         self.ca.set_pv_value("CONTROL", "Local & Locked")
         self.ca.set_pv_value(control_pv, set_value)
@@ -155,10 +154,9 @@ class IpsLegacyTests(IpsBaseTests, unittest.TestCase):
     @parameterized.expand(
         control_pv for control_pv in parameterized_list(CONTROL_COMMANDS_WITHOUT_VALUES)
     )
-    def test_WHEN_control_command_processed_THEN_remote_unlocked_set(self, 
-                                                                     _:str, 
-                                                                     control_pv: str) -> None:
+    def test_WHEN_control_command_processed_THEN_remote_unlocked_set(
+        self, _: str, control_pv: str
+    ) -> None:
         self.ca.set_pv_value("CONTROL", "Local & Locked")
         self.ca.process_pv(control_pv)
         self.ca.assert_that_pv_is("CONTROL", "Remote & Unlocked")
-

@@ -52,6 +52,7 @@ class IpsBaseTests(object, metaclass=ABCMeta):
     """
     Tests for the Ips IOC.
     """
+
     @abstractmethod
     def _get_device_prefix(self) -> str:
         pass
@@ -62,19 +63,19 @@ class IpsBaseTests(object, metaclass=ABCMeta):
 
     @abstractmethod
     def setUp(self) -> None:
-       self._lewis, self._ioc = get_running_lewis_and_ioc(EMULATOR_NAME, DEVICE_PREFIX)
-       self.ca = ChannelAccess(device_prefix=DEVICE_PREFIX)
+        self._lewis, self._ioc = get_running_lewis_and_ioc(EMULATOR_NAME, DEVICE_PREFIX)
+        self.ca = ChannelAccess(device_prefix=DEVICE_PREFIX)
 
     def tearDown(self) -> None:
         # Wait for statemachine to reach "at field" state after every test.
         self.ca.assert_that_pv_is("STATEMACHINE", "At field")
 
-        self.assertEqual(self._lewis.backdoor_get_from_device("quenched"), "False") # pyright: ignore
+        self.assertEqual(self._lewis.backdoor_get_from_device("quenched"), "False")  # pyright: ignore
 
     def test_WHEN_ioc_is_started_THEN_ioc_is_not_disabled(self) -> None:
         self.ca.assert_that_pv_is("DISABLE", "COMMS ENABLED")
 
-    def _assert_field_is(self, field: float, check_stable:bool=False) -> None:
+    def _assert_field_is(self, field: float, check_stable: bool = False) -> None:
         self.ca.assert_that_pv_is_number("FIELD:USER", field, tolerance=TOLERANCE)
         if check_stable:
             self.ca.assert_that_pv_value_is_unchanged("FIELD:USER", wait=30)
@@ -83,13 +84,13 @@ class IpsBaseTests(object, metaclass=ABCMeta):
     @abstractmethod
     def _assert_heater_is(self, heater_state: bool) -> None:
         pass
-    
+
     def _set_and_check_persistent_mode(self, mode: bool) -> None:
         self.ca.assert_setting_setpoint_sets_readback("YES" if mode else "NO", "PERSISTENT")
 
     @parameterized.expand(val for val in parameterized_list(TEST_VALUES))
     def test_GIVEN_persistent_mode_enabled_WHEN_magnet_told_to_go_to_field_setpoint_THEN_goes_to_that_setpoint_and_psu_ramps_to_zero(
-        self, _:str, val: float
+        self, _: str, val: float
     ) -> None:
         initial_field = 1
 
@@ -182,7 +183,9 @@ class IpsBaseTests(object, metaclass=ABCMeta):
         self._assert_field_is(val, check_stable=True)
 
     @contextmanager
-    def _backdoor_magnet_quench(self, reason: str="Test framework quench") -> Generator[None, None, None]:
+    def _backdoor_magnet_quench(
+        self, reason: str = "Test framework quench"
+    ) -> Generator[None, None, None]:
         self._lewis.backdoor_run_function_on_device("quench", [reason])
         try:
             yield
@@ -194,14 +197,16 @@ class IpsBaseTests(object, metaclass=ABCMeta):
             self.ca.assert_that_pv_alarm_is("STS:SYSTEM:FAULT", self.ca.Alarms.NONE)
 
     @parameterized.expand(val for val in parameterized_list(TEST_VALUES))
-    def test_WHEN_inductance_set_via_backdoor_THEN_value_in_ioc_updates\
-                    (self, _: str, val: float) -> None:
+    def test_WHEN_inductance_set_via_backdoor_THEN_value_in_ioc_updates(
+        self, _: str, val: float
+    ) -> None:
         self._lewis.backdoor_set_on_device("inductance", val)
         self.ca.assert_that_pv_is_number("MAGNET:INDUCTANCE", val, tolerance=TOLERANCE)
 
     @parameterized.expand(val for val in parameterized_list(TEST_VALUES))
-    def test_WHEN_measured_current_set_via_backdoor_THEN_value_in_ioc_updates\
-                    (self, _: str, val:float) -> None:
+    def test_WHEN_measured_current_set_via_backdoor_THEN_value_in_ioc_updates(
+        self, _: str, val: float
+    ) -> None:
         self._lewis.backdoor_set_on_device("measured_current", val)
         self.ca.assert_that_pv_is_number("MAGNET:CURR:MEAS", val, tolerance=TOLERANCE)
 
@@ -221,7 +226,7 @@ class IpsBaseTests(object, metaclass=ABCMeta):
             self.ca.set_pv_value("ACTIVITY:SP", "Clamp")
         else:
             self.ca.set_pv_value("ACTIVITY:SP", activity_state)
-            
+
         self.ca.assert_that_pv_is("ACTIVITY", activity_state)
         if activity_state == "Clamped":
             self.ca.assert_that_pv_alarm_is("ACTIVITY", "MAJOR")
@@ -230,7 +235,9 @@ class IpsBaseTests(object, metaclass=ABCMeta):
 
     # original problem/complaint:
     # in non-persistent mode, heater wait time always implemented, therefore too slow to set new fields
-    def test_GIVEN_at_field_in_non_persistent_mode_WHEN_new_field_set_THEN_no_wait_for_heater(self) -> None:
+    def test_GIVEN_at_field_in_non_persistent_mode_WHEN_new_field_set_THEN_no_wait_for_heater(
+        self,
+    ) -> None:
         # arrange: set mode to non-persistent, set field
         self._set_and_check_persistent_mode(False)
         self.ca.set_pv_value("FIELD:SP", 3.21)

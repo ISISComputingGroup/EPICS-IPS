@@ -50,7 +50,9 @@ NITROGEN_FILL_STOP_LEVEL = 90
 
 TOLERANCE = 0.0001
 
-HEATER_OFF_STATES = ["Off",]
+HEATER_OFF_STATES = [
+    "Off",
+]
 
 ACTIVITY_STATES = ["Hold", "To Setpoint", "To Zero", "Clamped"]
 
@@ -59,6 +61,7 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
     """
     Tests for the Ips SCPI protocol IOC.
     """
+
     def _get_device_prefix(self) -> str:
         return DEVICE_PREFIX
 
@@ -69,7 +72,7 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         ioc_config = self._get_ioc_config()
 
         # Time to wait for the heater to warm up/cool down (extracted from IOC macros above)
-        heater_wait_time = float((ioc_config[0].get("macros").get("HEATER_WAITTIME"))) # pyright: ignore
+        heater_wait_time = float((ioc_config[0].get("macros").get("HEATER_WAITTIME")))  # pyright: ignore
 
         self._lewis, self._ioc = get_running_lewis_and_ioc(EMULATOR_NAME, DEVICE_PREFIX)
         # Some changes happen on the order of HEATER_WAIT_TIME seconds.
@@ -84,12 +87,12 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         # Ensure in the correct mode
         # The following call was in the original legacy test code but is not needed
         # in the SCPI version.
-        # self.ca.set_pv_value("CONTROL:SP", "Off") 
+        # self.ca.set_pv_value("CONTROL:SP", "Off")
         # Remote and Unlocked
 
         self.ca.set_pv_value("ACTIVITY:SP", "To Setpoint")
 
-        # Don't run reset as the sudden change of state confuses the IOC's state machine. 
+        # Don't run reset as the sudden change of state confuses the IOC's state machine.
         # No matter what the initial state of the device the SNL should be able to deal with it.
         # self._lewis.backdoor_run_function_on_device("reset")
 
@@ -114,11 +117,10 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
                 "Off",
             )
 
-
     @parameterized.expand(field for field in parameterized_list(TEST_VALUES))
     def test_GIVEN_magnet_quenches_while_at_field_THEN_ioc_displays_this_quench_in_statuses(
-        self, _: str, field: float ) -> None:
-        
+        self, _: str, field: float
+    ) -> None:
         self._set_and_check_persistent_mode(False)
         self.ca.set_pv_value("FIELD:SP", field)
         self._assert_field_is(field)
@@ -132,36 +134,33 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
             # (mirroring what the field ought to do in the real device)
             self.ca.assert_that_pv_is_number("FIELD", 0, tolerance=TOLERANCE)
             self.ca.assert_that_pv_is_number("FIELD:USER", 0, tolerance=TOLERANCE)
-            self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT",
-                                        0, tolerance=TOLERANCE)
+            self.ca.assert_that_pv_is_number("MAGNET:FIELD:PERSISTENT", 0, tolerance=TOLERANCE)
 
     def test_GIVEN_magnet_temperature_sensor_open_circuit_THEN_ioc_states_open_circuit(
-        self) -> None:
+        self,
+    ) -> None:
         # Simulate an open circuit on the temperature sensor
         self._lewis.backdoor_run_function_on_device("set_tempboard_status", [1])
         self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:TBOARD.B0", "1", timeout=10)
 
-    def test_GIVEN_level_sensor_short_circuit_THEN_ioc_states_short_circuit(
-        self) -> None:
+    def test_GIVEN_level_sensor_short_circuit_THEN_ioc_states_short_circuit(self) -> None:
         # Simulate an short circuit on the level sensor
         self._lewis.backdoor_run_function_on_device("set_levelboard_status", [2])
         self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:LBOARD.B1", "1", timeout=10)
 
-    def test_WHEN_SYSALARM_Tboard_is_firmware_error_THEN_ioc_states_firmware_error(
-        self) -> None:
+    def test_WHEN_SYSALARM_Tboard_is_firmware_error_THEN_ioc_states_firmware_error(self) -> None:
         """
         Test that the SYSALARM TBOARD PV is set to 'Firmware Error' when the temperature board
         firmware is in error state.
         """
         self._lewis.backdoor_run_function_on_device("set_tempboard_status", [3])
-        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:TBOARD.B2", '1', timeout=10)
+        self.ca.assert_that_pv_is("STS:SYSTEM:ALARM:TBOARD.B2", "1", timeout=10)
 
     @parameterized.expand(val for val in parameterized_list(TEST_NITROGEN_LEVEL_FREQ_VALUES))
     def test_GIVEN_level_freq_at_zero_THEN_ioc_states_freq(self, _: str, val: float) -> None:
         # Simulate the nitrogen frequency at zero
         self.ca.set_pv_value("LVL:NIT:FREQ:ZERO:SP", val)
-        self.ca.assert_that_pv_is_number("LVL:NIT:FREQ:ZERO", val,
-                                         tolerance=TOLERANCE, timeout=10)
+        self.ca.assert_that_pv_is_number("LVL:NIT:FREQ:ZERO", val, tolerance=TOLERANCE, timeout=10)
 
     @parameterized.expand(val for val in parameterized_list(TEST_NITROGEN_LEVEL_FREQ_VALUES))
     def test_GIVEN_level_freq_at_full_THEN_ioc_states_freq(self, _: str, val: float) -> None:
@@ -170,20 +169,20 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         self.ca.assert_that_pv_is_number("LVL:NIT:FREQ:FULL", val, tolerance=TOLERANCE, timeout=10)
 
     @parameterized.expand(val for val in parameterized_list(TEST_HE_LEVEL_RESISTANCE_VALUES))
-    def test_given_level_resistance_empty_THEN_ioc_states_resistance(self, _: str,
-                                                                     val: float) -> None:
+    def test_given_level_resistance_empty_THEN_ioc_states_resistance(
+        self, _: str, val: float
+    ) -> None:
         # Simulate the helium level resistance when empty
         self.ca.set_pv_value("LVL:HE:EMPTY:RES:SP", val)
-        self.ca.assert_that_pv_is_number("LVL:HE:EMPTY:RES", val,
-                                         tolerance=TOLERANCE, timeout=10)
+        self.ca.assert_that_pv_is_number("LVL:HE:EMPTY:RES", val, tolerance=TOLERANCE, timeout=10)
 
     @parameterized.expand(val for val in parameterized_list(TEST_HE_LEVEL_RESISTANCE_VALUES))
-    def test_given_level_resistance_full_THEN_ioc_states_resistance(self, _: str,
-                                                                    val: float) -> None:
+    def test_given_level_resistance_full_THEN_ioc_states_resistance(
+        self, _: str, val: float
+    ) -> None:
         # Simulate the helium level resistance when empty
         self.ca.set_pv_value("LVL:HE:FULL:RES:SP", val)
-        self.ca.assert_that_pv_is_number("LVL:HE:FULL:RES", val,
-                                         tolerance=TOLERANCE, timeout=10)
+        self.ca.assert_that_pv_is_number("LVL:HE:FULL:RES", val, tolerance=TOLERANCE, timeout=10)
 
     def test_WHEN_nitrogen_read_interval_set_THEN_ioc_updates_read_interval(self) -> None:
         """
@@ -191,9 +190,8 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         """
         # Set the nitrogen read interval
         self.ca.set_pv_value("LVL:NIT:READ:INTERVAL:SP", 1000)
-        self.ca.assert_that_pv_is_number("LVL:NIT:READ:INTERVAL",
-                                         1000, tolerance=TOLERANCE)
-        
+        self.ca.assert_that_pv_is_number("LVL:NIT:READ:INTERVAL", 1000, tolerance=TOLERANCE)
+
     def test_WHEN_helium_read_rate_set_THEN_ioc_updates_read_rate(self) -> None:
         """
         Test that the helium read rate can be set and is reflected in the IOC.
@@ -203,4 +201,3 @@ class IpsSCPITests(IpsBaseTests, unittest.TestCase):
         self.ca.assert_that_pv_is("LVL:HE:PULSE:READ:RATE", "Slow")
         self.ca.set_pv_value("LVL:HE:PULSE:READ:RATE:SP", 0)
         self.ca.assert_that_pv_is("LVL:HE:PULSE:READ:RATE", "Fast")
-
