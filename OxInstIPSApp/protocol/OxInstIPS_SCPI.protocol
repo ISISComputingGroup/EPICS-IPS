@@ -15,11 +15,6 @@
 #
 Terminator = "\n";
 
-# The lagacy timeout values cribbed from OxInstCryojet module - had occasional
-# problems with the default settings with one record timing out and
-# another record seeing the reply - see if longer time out will fix it.
-# Also see if this is still applicable to the SCPI protocol.
-#
 readtimeout = 500;
 replytimeout = 5000;
 locktimeout = 20000;
