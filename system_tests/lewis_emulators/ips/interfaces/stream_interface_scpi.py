@@ -755,7 +755,6 @@ class IpsStreamInterface(StreamInterface):
         Gets the pressure in mBar.
         :return: The pressure in mBar.
         """
-        # return self.device.pressure
         return (
             f"STAT:DEV:{DeviceUID.pressure_sensor_10t}:PRES:SIG:PRES:"
             f"{self.device.pressure:.4f}mB"
