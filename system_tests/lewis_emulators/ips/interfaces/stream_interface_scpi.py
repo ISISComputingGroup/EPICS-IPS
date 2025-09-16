@@ -406,10 +406,6 @@ class IpsStreamInterface(StreamInterface):
     def get_persistent_magnet_current(self) -> str:
         return f"STAT:DEV:{DeviceUID.magnet_supply}:PSU:SIG:PCUR:{self.device.magnet_current:.4f}A"
 
-    # TBD
-    def get_trip_current(self) -> str:
-        return f"R{self.device.trip_current}"
-
     def get_persistent_magnet_field(self) -> str:
         return (
             f"STAT:DEV:{DeviceUID.magnet_supply}"
