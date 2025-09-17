@@ -23,7 +23,7 @@ IOCS = [
         "directory": get_default_ioc_dir("IPS"),
         "emulator": EMULATOR_NAME,
         "lewis_protocol": "ips_legacy",
-        "ioc_launcher_class": ProcServLauncher,
+        # "ioc_launcher_class": ProcServLauncher,
         "macros": {
             "STREAMPROTOCOL": "LEGACY",
             "MANAGER_ASG": "DEFAULT",
