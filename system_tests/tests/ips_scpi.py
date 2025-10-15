@@ -6,7 +6,7 @@ from utils.ioc_launcher import get_default_ioc_dir  # pyright: ignore
 from utils.test_modes import TestModes  # pyright: ignore
 from utils.testing import get_running_lewis_and_ioc, parameterized_list  # pyright: ignore
 
-from .ips_common import IpsBaseTests
+from .common_tests.ips_common import IpsBaseTests
 
 DEVICE_PREFIX = "IPS_01"
 EMULATOR_NAME = "ips"

@@ -2,11 +2,11 @@ import unittest
 
 from parameterized import parameterized  # pyright: ignore
 from utils.channel_access import ChannelAccess  # pyright: ignore
-from utils.ioc_launcher import ProcServLauncher, get_default_ioc_dir  # pyright: ignore
+from utils.ioc_launcher import get_default_ioc_dir  # pyright: ignore
 from utils.test_modes import TestModes  # pyright: ignore
 from utils.testing import get_running_lewis_and_ioc, parameterized_list  # pyright: ignore
 
-from .ips_common import IpsBaseTests
+from .common_tests.ips_common import IpsBaseTests
 
 # Tell ruff to ignore the N802 warning (function name should be lowercase).
 # Names contain GIVEN, WHEN, THEN
@@ -23,7 +23,6 @@ IOCS = [
         "directory": get_default_ioc_dir("IPS"),
         "emulator": EMULATOR_NAME,
         "lewis_protocol": "ips_legacy",
-        # "ioc_launcher_class": ProcServLauncher,
         "macros": {
             "STREAMPROTOCOL": "LEGACY",
             "MANAGER_ASG": "DEFAULT",
