@@ -12,15 +12,11 @@
  * where the bit patterns will be established according to active alarms.
  *
  * INPA - Input string containing the alarm message.
- * INPB - Board identifier form the magnet temperature controller (e.g. "MB1.T1")
- * INPC - Board identifier form the 10T magnet temperature controller (e.g. "DB8.T1")
- * INPD - Board identifier form the Levels controller (e.g. "DB1.L1")
- * INPE - Board identifier form the pressure controller (e.g. "DB5.P1")
  *
  * OUTA - Output field for the magnet temperature alarm status (mbbidirect).
- * OUTA - Output field for the magnet 10T temperature alarm status (mbbidirect).
- * OUTA - Output field for the levels alarm status (mbbidirect).
- * OUTA - Output field for the pressure alarm status (mbbidirect).
+ * OUTB - Output field for the magnet 10T temperature alarm status (mbbidirect).
+ * OUTC - Output field for the levels alarm status (mbbidirect).
+ * OUTD - Output field for the pressure alarm status (mbbidirect).
  *
  * Incoming alarm messages are expected to be in the format:
  * "STAT:SYS:ALRM:DB8.T1<9>Open Circuit;MB1.T1<9>Open Circuit;"
@@ -141,10 +137,6 @@ static long handle_system_alarm_status(aSubRecord *prec)
 
     if (
         prec->fta != menuFtypeCHAR
-     || prec->ftb != menuFtypeSTRING
-     || prec->ftc != menuFtypeSTRING
-     || prec->ftd != menuFtypeSTRING
-     || prec->fte != menuFtypeSTRING
      || prec->ftva != menuFtypeLONG
      || prec->ftvb != menuFtypeLONG
      || prec->ftvc != menuFtypeLONG
