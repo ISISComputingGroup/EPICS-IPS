@@ -16,3 +16,5 @@ relPaths.sh
 /doc/
 *_info_positions.req
 *_info_settings.req
+__pycache__/
+.idea

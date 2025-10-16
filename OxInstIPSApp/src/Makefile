@@ -2,11 +2,8 @@ TOP=../..
 
 include $(TOP)/configure/CONFIG
 
-# -------------------------------
-# Build an Diamond Support Module
-# -------------------------------
-
-PROD_IOC += OxInstIPS
+LIBRARY_IOC += OxInstIPS
+PROD_IOC += OxInstIPSIoc
 
 # xxxRecord.h will be created from xxxRecord.dbd
 #DBDINC += xxx.h
@@ -21,31 +18,43 @@ PROD_IOC += OxInstIPS
 # OxInstIPS.dbd will be installed into <top>/dbd
 DBD += OxInstIPS.dbd
 
-# OxInstIPS.dbd will be created from these files
+# OxInstIPSIoc.dbd will be created from these files
+OxInstIPSIoc_DBD += base.dbd
+OxInstIPSIoc_DBD += calcSupport.dbd
+OxInstIPSIoc_DBD += asyn.dbd
+OxInstIPSIoc_DBD += stream.dbd
+OxInstIPSIoc_DBD += asubFunctions.dbd
+OxInstIPSIoc_DBD += OxInstIPS.dbd
+
 OxInstIPS_DBD += base.dbd
 OxInstIPS_DBD += calcSupport.dbd
 OxInstIPS_DBD += asyn.dbd
 OxInstIPS_DBD += stream.dbd
+OxInstIPS_DBD += asubFunctions.dbd
 
 # OxInstIPS_registerRecordDeviceDriver.cpp will be created
 # OxInstIPS.dbd
-OxInstIPS_SRCS += OxInstIPS_registerRecordDeviceDriver.cpp
+OxInstIPSIoc_SRCS += OxInstIPS_registerRecordDeviceDriver.cpp
+OxInstIPS_SRCS += alarms.cpp
 
 # These two lines are needed for non-vxWorks builds, such as Linux
-OxInstIPS_SRCS_DEFAULT += OxInstIPSMain.cpp
-OxInstIPS_SRCS_vxWorks += -nil-
+OxInstIPSIoc_SRCS_DEFAULT += OxInstIPSMain.cpp
+OxInstIPSIoc_SRCS_vxWorks += -nil-
 
 # Add locally compiled object code
 #OxInstIPS_SRCS +=
 
 # The following adds object code from base/src/vxWorks
-OxInstIPS_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
+OxInstIPSIoc_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
 # This line says that this IOC Application depends on the
 # xxx Support Module
-OxInstIPS_LIBS += stream asyn calc sscan pcre
+OxInstIPSIoc_LIBS += stream calc sscan pcre utilities asubFunctions OxInstIPS
 
 # We need to link this IOC Application against the EPICS Base libraries
+OxInstIPSIoc_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+OxInstIPS_LIBS += stream calc sscan pcre utilities asubFunctions
 OxInstIPS_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 # ---------------------------------------------------
@@ -77,3 +86,5 @@ OxInstIPS_LIBS += $(EPICS_BASE_IOC_LIBS)
 #endif
 
 include $(TOP)/configure/RULES
+
+

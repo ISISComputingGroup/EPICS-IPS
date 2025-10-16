@@ -1,0 +1,322 @@
+# File OxInstIPS_SCPI.protocol
+#
+# Stream Device protocol file for the Oxford Instruments Modular IPS 
+# superconducting magnet power supplies.
+# This protocol supports the SCPI commands for the IPS, replacing the legacy command set.
+#
+# The full protocol is described in the IPS Operators Handbook. 
+#
+# The commands are case-sensitive.
+# Keywords are a maximum of four characters long. Keywords longer than four characters
+# generate an invalid command response.
+# Keywords are separated by a colon: (ASCII 0x3Ah).
+# The maximum line length is 1024 bytes (characters), including line terminators.
+# All command lines are terminated by the new line character \n (ASCII 0x0Ah).
+#
+Terminator = "\n";
+
+readtimeout = 500;
+replytimeout = 5000;
+locktimeout = 20000;
+PollPeriod = 500;
+ExtraInput = Ignore;
+
+# Device board/slot names
+magnet_temperature_sensor = "MB1.T1";
+level_meter = "DB1.L1";
+magnet_supply = "GRPZ";
+temperature_sensor_10T = "DB8.T1";
+pressure_sensor_10T = "DB5.P1";
+
+#########################################################################################
+# ---------
+# *IDN?
+# ---------
+# IDN:OXFORD INSTRUMENTS:MERCURY dd:ss:ff
+# Where:
+#   dd is the basic instrument type (iPS , iPS, Cryojet etc.)
+#   ss is the serial number of the main board
+#   ff is the firmware version of the instrument
+# Get the unit version information - returns unit type and firmware information.
+# Manual says letter commands always reply with themselves at the start, but
+# found out this one does not.  Manual also shows a copyright symbol, which is not an
+# ASCII symbol and might cause problems for EPICS.  In practice found (c) instead.
+# The %s format grabs the string upto the first space, the %c grabs the rest.  It
+# was too long to fit into one EPICS string record value.
+getVersion { out "*IDN?";
+             in "IDN:OXFORD INSTRUMENTS:%(\$1MODEL.VAL)[ a-zA-Z0-9]:%*[ a-zA-Z0-9]:%(\$1VERSION.VAL)s";}
+
+#########################################################################################
+
+# Get measured power supply voltage in volts
+# The return string is of the form: STAT:DEV:GRPZ:PSU:SIG:VOLT:-0.0002V
+getSupplyVoltage { out "READ:DEV:" $magnet_supply ":PSU:SIG:VOLT";
+                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:VOLT:%f%*s";}
+
+# Get demand current (output current) in amps. We are only interested in the Z axis magnet group.
+# The return string is of the form: STAT:DEV:GRPZ:PSU:CSET:<value>:A
+getDemandCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET";
+                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:CSET:%f%*s";}
+
+# Get measured magnet curren in amps - ER=no.
+# The return string is of the form: STAT:DEV:GRPZ:PSU:SIG:CURR:-0.0001A
+getMeasuredMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CURR";
+                           in "STAT:DEV:" $magnet_supply ":PSU:SIG:CURR:%f%*s";}
+
+# Get set point (target current) in amps ER=yes.
+getSetpointCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:CSET";
+                     in "STAT:DEV:" $magnet_supply ":PSU:SIG:CSET:%f%*s";}
+
+# Get current sweep rate in amps per minute ER=yes.
+getCurrentSweepRate { out "READ:DEV:" $magnet_supply ":PSU:SIG:RCST";
+                      in "STAT:DEV:" $magnet_supply ":PSU:SIG:RCST:%f%*s";}
+
+# Get demand field (output field) in tesla ER=yes.
+getDemandField { out "READ:DEV:" $magnet_supply ":PSU:SIG:FLD";
+                 in "STAT:DEV:" $magnet_supply ":PSU:SIG:FLD:%f%*s";}
+
+# Get set point (target field) in tesla ER=yes.
+getSetpointField { out "READ:DEV:" $magnet_supply ":PSU:SIG:FSET";
+                   in "STAT:DEV:" $magnet_supply ":PSU:SIG:FSET:%f%*s";}
+
+# Get field sweep rate in tesla per minute ER=yes.
+# Returns status like: STAT:DEV:GRPZ:PSU:SIG:RFST:0.3850T/m
+getFieldSweepRate { out "READ:DEV:" $magnet_supply ":PSU:SIG:RFST";
+                    in "STAT:DEV:" $magnet_supply ":PSU:SIG:RFST:%f%*s";}
+
+# Get software voltage limit in volts ER=no.
+# The documentation states that a float is returned, but in reality, a string may be returned instead, such as 'N/A'
+getSoftwareVoltageLimit { out "READ:DEV:" $magnet_supply ":PSU:VLIM";
+                          in "STAT:DEV:" $magnet_supply ":PSU:VLIM:%f%*s";  @mismatch{in "%*s";} wait 100;}
+
+# Get persistent magnet current in amps ER=yes.
+getPersistentMagnetCurrent { out "READ:DEV:" $magnet_supply ":PSU:SIG:PCUR";
+                             in "STAT:DEV:" $magnet_supply ":PSU:SIG:PCUR:%f%*s";}
+
+# Get persistent magnetic field in tesla ER=yes.
+getPersistentMagnetField { out "READ:DEV:" $magnet_supply ":PSU:SIG:PFLD";
+                           in "STAT:DEV:" $magnet_supply ":PSU:SIG:PFLD:%f%*s";}
+
+# Get switch heater current in milliamp ER=no.
+getHeaterCurrent { out "READ:DEV:" $magnet_supply ":PSU:SHTC";
+                   in "STAT:DEV:" $magnet_supply ":PSU:SHTC:%f%*s";}
+
+# Get safe current limit, most negative in amps ER=no.
+getNegCurrentLimit { out "READ:DEV:" $magnet_supply ":PSU:CLIM";
+                     in "STAT:DEV:" $magnet_supply ":PSU:CLIM:%f%*s";}
+
+# Get safe current limit, most positive in amps ER=no.
+# no units appended to the value, so assume amps.
+getPosCurrentLimit { out "READ:DEV:" $magnet_supply ":PSU:CLIM";
+                     in "STAT:DEV:" $magnet_supply ":PSU:CLIM:%f";}
+
+# Get lead resistance (PTC/NTC) Ohms.
+# unit appended 'R'
+getLeadResistance { out "READ:DEV:" $magnet_temperature_sensor ":TEMP:SIG:RES";
+                    in "STAT:DEV:" $magnet_temperature_sensor ":TEMP:SIG:RES:%f%*s";}
+
+# Get magnet inductance in henry ER=no.
+# no units appended
+getMagnetInductance { out "READ:DEV:" $magnet_supply ":PSU:IND";
+                      in "STAT:DEV:" $magnet_supply ":PSU:IND:%f";}
+
+# Get Activity status (analogous to the legacy A command)
+getActivity { out "READ:DEV:" $magnet_supply ":PSU:ACTN";
+              in "STAT:DEV:" $magnet_supply ":PSU:ACTN:%#{HOLD=0|RTOS=1|RTOZ=2|CLMP=4}";}
+
+getHeaterStatus { out "READ:DEV:" $magnet_supply ":PSU:SIG:SWHT";
+                  in "STAT:DEV:" $magnet_supply ":PSU:SIG:SWHT:%{OFF|ON}";}
+
+# *** Need to know what is returned on no alarms present, as it is not documented. ***
+# *** Found empirically that it returns an empty string (afterSTAT:SYS:ALRM:)
+#     when no alarms are present. ***
+# Note: For the input we must use %#s (not just %s) as there may be a tab character delimiter
+getSysAlarms { out "READ:SYS:ALRM";
+               in "STAT:SYS:ALRM:%#s";}
+
+
+# --------------- The following work around limitation of getting legacy status from SCPI protocol -------------
+# Get PSU Status status DWORD
+getMagnetSupplyStatus { out "READ:DEV:" $magnet_supply ":PSU:STAT";
+                        in "STAT:DEV:" $magnet_supply ":PSU:STAT:%x";}
+
+# --------------------------------------------------------------------------------------------------------------
+
+
+# ---------
+# SYS:LOCK Command
+# ---------
+# Set Control mode - grab control of the unit from local users.
+# OFF | SOFT | ON
+# With a real device, this command always replies: STAT:SET:SYS:LOCK:OFF:DENIED
+# where 'OFF' may be 'OFF', 'ON' or 'SOFT'.
+# It's also not possible to read the LOCK status. So this feature might be totally useless.
+setControl { out "SET:SYS:LOCK:%{OFF|SOFT|ON}"; in "READ:SYS:LOCK:%*s";}
+
+# ---------
+# DEV:<UID>:PSU:ACTN
+# ---------
+# Set the activity - i.e. Make it do something.
+# HOLD -> Hold
+# RTOS -> To Set Point
+# RTOZ -> To Zero
+# CLMP -> Clamp
+setActivity { out "SET:DEV:" $magnet_supply ":PSU:ACTN:%#{HOLD=0|RTOS=1|RTOZ=2|CLMP=4}";
+              in "STAT:SET:DEV:" $magnet_supply ":PSU:ACTN:%*s";}
+
+# ---------
+# SWHT Command
+# ---------
+#
+# Set the status of the heater.
+# 0 = heater off (close switch)
+# 1 = heater on (open switch) [Checks that magnet curr == psu curr before having any effect, so safer]
+# Returns status of this form: STAT:SET:DEV:GRPZ:PSU:SIG:SWHT:OFF:VALID
+# DO NOT USE SWHN command!!
+#
+setHeaterStatus { out "SET:DEV:" $magnet_supply ":PSU:SIG:SWHT:%#{OFF=0|ON=1}";
+                  in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:SWHT:%*s";
+                  @init {getHeaterStatus;} }
+
+# Set the setpoint (target) current.
+# Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:CSET:0.0004:VALID
+setSetpointCurrent { out "SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%#.4f";
+                     in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:CSET:%*f:%*s";
+                     @init {getSetpointCurrent;} }
+
+# Set the setpoint (target) field.
+# Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:FSET:0.00:VALID
+setSetpointField { out "SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%#.5f";
+                   in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:FSET:%*f%*s";
+                   @init {getSetpointField;} }
+
+# Set current sweep rate.
+# Rate at which current will be ramped or swept to target, either the setpoint or zero.
+# Returns status like: STAT:DEV:GRPZ:PSU:SIG:RCST:5.5:VALID
+setCurrentSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%#.3f";
+                      in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RCST:%*f%*s";
+                      @init {getCurrentSweepRate;} }
+
+# Set field sweep rate.
+# Rate at which field will be ramped or swept to target, either the setpoint or zero.
+# Returns status like: STAT:SET:DEV:GRPZ:PSU:SIG:RFST:0.3850:VALID
+setFieldSweepRate { out "SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%#.4f";
+                    in "STAT:SET:DEV:" $magnet_supply ":PSU:SIG:RFST:%*f%*s";
+                    @init {getFieldSweepRate;} }
+
+# -------------------------------------------------------
+#    LEVELS BOARD COMMANDS
+# -------------------------------------------------------
+getLevelNitFreqZero { out "READ:DEV:" $level_meter ":LVL:NIT:FREQ:ZERO";
+                  in  "STAT:DEV:" $level_meter ":LVL:NIT:FREQ:ZERO:%f";}
+
+setLevelNitFreqZero { out "SET:DEV:" $level_meter ":LVL:NIT:FREQ:ZERO:%d";
+                  in  "STAT:SET:DEV:" $level_meter ":LVL:NIT:FREQ:ZERO:%*d%*s";
+                  @init {getLevelNitFreqZero;} }
+
+getLevelNitFreqFull { out "READ:DEV:" $level_meter ":LVL:NIT:FREQ:FULL";
+                  in  "STAT:DEV:" $level_meter ":LVL:NIT:FREQ:FULL:%f";}
+
+setLevelNitFreqFull { out "SET:DEV:" $level_meter ":LVL:NIT:FREQ:FULL:%d";
+                  in  "STAT:SET:DEV:" $level_meter ":LVL:NIT:FREQ:FULL:%*d%*s";
+                  @init {getLevelNitFreqFull;}}
+
+getLevelHeEmptyRes { out "READ:DEV:" $level_meter ":LVL:HEL:RES:ZERO";
+                     in  "STAT:DEV:" $level_meter ":LVL:HEL:RES:ZERO:%f";}
+
+setLevelHeEmptyRes { out "SET:DEV:" $level_meter ":LVL:HEL:RES:ZERO:%f";
+                     in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:RES:ZERO:%*f%*s";
+                     @init {getLevelHeEmptyRes;}}
+
+getLevelHeFullRes { out "READ:DEV:" $level_meter ":LVL:HEL:RES:FULL";
+                     in  "STAT:DEV:" $level_meter ":LVL:HEL:RES:FULL:%f";}
+
+setLevelHeFullRes { out "SET:DEV:" $level_meter ":LVL:HEL:RES:FULL:%f";
+                     in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:RES:FULL:%*f%*s";
+                     @init {getLevelHeFullRes;}}
+
+
+getLevelHeFillStartThreshold { out "READ:DEV:" $level_meter ":LVL:HEL:LOW";
+                               in  "STAT:DEV:" $level_meter ":LVL:HEL:LOW:%d";}
+
+setLevelHeFillStartThreshold { out "SET:DEV:" $level_meter ":LVL:HEL:LOW:%d";
+                               in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:LOW:%*d%*s";
+                               @init {getLevelHeFillStartThreshold;}}
+
+getLevelHeFillStopThreshold { out "READ:DEV:" $level_meter ":LVL:HEL:HIGH";
+                               in  "STAT:DEV:" $level_meter ":LVL:HEL:HIGH:%d";}
+
+setLevelHeFillStopThreshold { out "SET:DEV:" $level_meter ":LVL:HEL:HIGH:%d";
+                               in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:HIGH:%*d%*s";
+                               @init {getLevelHeFillStopThreshold;}}
+
+# The documentation is wrong!:
+# READ:DEV:DB1.L1:LVL:HEL:RFL actually returns which relay output is used to turn the
+# autofill on or off (or indeed can be used to set which relay is used), not the current status.
+# If this is implemented in future, it will need to be modified.
+#getLevelHeRefilling { out "READ:DEV:" $level_meter ":LVL:HEL:RFL";
+#                       in  "STAT:DEV:" $level_meter ":LVL:HEL:RFL:%{OFF|ON}";}
+
+getLevelHeReadingRate { out "READ:DEV:" $level_meter ":LVL:HEL:PULS:SLOW";
+                            in  "STAT:DEV:" $level_meter ":LVL:HEL:PULS:SLOW:%{OFF|ON}";}
+
+setLevelHeReadingRate { out "SET:DEV:" $level_meter ":LVL:HEL:PULS:SLOW:%{OFF|ON}";
+                            in  "STAT:SET:DEV:" $level_meter ":LVL:HEL:PULS:SLOW:%*s";
+                            @init {getLevelHeReadingRate;}}
+
+
+getLevelNitReadInterval { out "READ:DEV:" $level_meter ":LVL:NIT:PPS";
+                          in  "STAT:DEV:" $level_meter ":LVL:NIT:PPS:%d";
+                          @init {getLevelHeFillStopThreshold;}}
+
+setLevelNitReadInterval { out "SET:DEV:" $level_meter ":LVL:NIT:PPS:%d";
+                          in  "STAT:DEV:" $level_meter ":LVL:NIT:PPS:%*d%*s";
+                          @init {getLevelNitReadInterval;}}
+
+
+getLevelNitFillStartThreshold { out "READ:DEV:" $level_meter ":LVL:NIT:LOW";
+                               in  "STAT:DEV:" $level_meter ":LVL:NIT:LOW:%d";}
+
+setLevelNitFillStartThreshold { out "SET:DEV:" $level_meter ":LVL:NIT:LOW:%d";
+                               in  "STAT:SET:DEV:" $level_meter ":LVL:NIT:LOW:%*d%*s";
+                               @init {getLevelNitFillStartThreshold;}}
+
+getLevelNitFillStopThreshold { out "READ:DEV:" $level_meter ":LVL:NIT:HIGH";
+                               in  "STAT:DEV:" $level_meter ":LVL:NIT:HIGH:%d";}
+
+setLevelNitFillStopThreshold { out "SET:DEV:" $level_meter ":LVL:NIT:HIGH:%d";
+                               in  "STAT:SET:DEV:" $level_meter ":LVL:NIT:HIGH:%*d%*s";
+                               @init {getLevelNitFillStopThreshold;}};
+
+# The documentation is wrong!:
+# READ:DEV:DB1.L1:LVL:NIT:RFL actually returns which relay output is used to turn the
+# autofill on or off (or indeed can be used to set which relay is used), not the current status.
+# If this is implemented in future, it will need to be modified.
+#getLevelNitRefilling { out "READ:DEV:" $level_meter ":LVL:NIT:RFL";
+#                       in  "STAT:DEV:" $level_meter ":LVL:NIT:RFL:%{OFF|ON}";}
+
+getLevelNitrogenLevel { out "READ:DEV:" $level_meter ":LVL:SIG:NIT:LEV";
+                        in  "STAT:DEV:" $level_meter ":LVL:SIG:NIT:LEV:%f";}
+
+getLevelHeliumLevel { out "READ:DEV:" $level_meter ":LVL:SIG:HEL:LEV";
+                      in  "STAT:DEV:" $level_meter ":LVL:SIG:HEL:LEV:%f";}
+
+# -------------------------------------------------------
+#    TEMPERATURE BOARD COMMANDS
+# -------------------------------------------------------
+getMagnetTemperature { out "READ:DEV:" $magnet_temperature_sensor ":TEMP:SIG:TEMP";
+                     in  "STAT:DEV:" $magnet_temperature_sensor ":TEMP:SIG:TEMP:%f%*s";}
+
+getLambdaPlateTemperature { out "READ:DEV:" $temperature_sensor_10T ":TEMP:SIG:TEMP";
+                     in  "STAT:DEV:" $temperature_sensor_10T ":TEMP:SIG:TEMP:%f%*s";}
+
+
+# -------------------------------------------------------
+#    PRESSURE BOARD COMMANDS
+# -------------------------------------------------------
+getPressure { out "READ:DEV:" $pressure_sensor_10T ":PRES:SIG:PRES";
+              in  "STAT:DEV:" $pressure_sensor_10T ":PRES:SIG:PRES:%f%*s";}
+
+
+
+

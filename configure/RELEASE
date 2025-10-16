@@ -16,11 +16,13 @@ TEMPLATE_TOP=$(EPICS_BASE)/templates/makeBaseApp/top
 # define INSTALL_LOCATION_APP here
 #INSTALL_LOCATION_APP=<fullpathname>
 
-# Support Area
-SUPPORT=/dls_sw/prod/R3.14.12.3/support
-
 # Support Modules
 ASYN=$(SUPPORT)/asyn/master
+ONCRPC=$(SUPPORT)/oncrpc/master
+SNCSEQ=$(SUPPORT)/seq/master
+UTILITIES=$(SUPPORT)/utilities/master
+
+ASUBFUNCTIONS=$(SUPPORT)/asubFunctions/master
 STREAMDEVICE=$(SUPPORT)/StreamDevice/master
 CALC=$(SUPPORT)/calc/master
 SSCAN=$(SUPPORT)/sscan/master
