@@ -127,7 +127,7 @@ bool strcmp_nocase(const string& a, const string& b)
                       });
 }
 
-static long handle_system_alarm_status(aSubRecord *prec)
+long handle_system_alarm_status(aSubRecord *prec)
     {
     vector<string> token_list;
     vector<string> BOARD_ARRAY;
