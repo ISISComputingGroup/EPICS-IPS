@@ -5,7 +5,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-extern long handle_system_alarm_status(aSubRecord *prec);
+long handle_system_alarm_status(aSubRecord *prec);
 
 #ifdef __cplusplus
 }
